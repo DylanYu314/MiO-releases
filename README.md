@@ -25,7 +25,7 @@ holding your music.
 
 <a href="https://github.com/DylanYu314/MiO-releases/releases/latest"><img alt="Download for Android" src="https://img.shields.io/badge/Download%20for%20Android-8B5CF6?style=for-the-badge&logo=android&logoColor=white"></a>
 
-<sub>Also at <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> · <a href="https://mio.dlany.uk">Website</a> · <a href="https://mio.dlany.uk/privacy/">Privacy</a></sub>
+<sub>Also at <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> · <a href="https://mio.dlany.uk/privacy/">Privacy</a></sub>
 
 </div>
 
@@ -128,7 +128,7 @@ which is unreachable there. `dl.dlany.uk` is unreachable too.
 **Use this link instead** — it is the same file, and it has been verified
 downloading in full (all 69 MB) from mainland China:
 
-**⬇ [https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk)**
+**⬇ [https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk)**
 
 Once it is installed, the app's own update check uses that same host, so updates
 keep arriving normally.
@@ -139,8 +139,8 @@ All three are the same file, byte for byte.
 
 | Source | Reachable from mainland China |
 |---|---|
-| [`pub-…r2.dev`](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk) | ✅ yes — measured |
-| [`dl.dlany.uk`](https://dl.dlany.uk/MiO-v1.0.1.apk) | ❌ no |
+| [`pub-…r2.dev`](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk) | ✅ yes — measured |
+| [`dl.dlany.uk`](https://dl.dlany.uk/MiO-v1.1.0.apk) | ❌ no |
 | [GitHub release asset](https://github.com/DylanYu314/MiO-releases/releases/latest) | ❌ no — the page loads, the download fails |
 
 ---
@@ -263,5 +263,6 @@ npm run test:e2e      # Playwright, against a real backend on a disposable datab
 
 ## Licence
 
+Copyright © 2026 Dylan Yu. Free software under
 [GNU AGPL-3.0](./LICENSE). Not affiliated with YouTube, Spotify, Bilibili,
 NetEase Cloud Music, QQ Music or Kugou.

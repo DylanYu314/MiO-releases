@@ -22,9 +22,9 @@
   <a href="./README.zh-CN.md"><img alt="简体中文" src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-8B5CF6?style=for-the-badge"></a>
 </p>
 
-<a href="https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk"><img alt="下载安卓版" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD%E5%AE%89%E5%8D%93%E7%89%88-8B5CF6?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk"><img alt="下载安卓版" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD%E5%AE%89%E5%8D%93%E7%89%88-8B5CF6?style=for-the-badge&logo=android&logoColor=white"></a>
 
-<sub>也可以从 <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> 下载 · <a href="https://mio.dlany.uk">官网</a> · <a href="https://mio.dlany.uk/privacy/">隐私政策</a></sub>
+<sub>也可以从 <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> 下载 · <a href="https://mio.dlany.uk/privacy/">隐私政策</a></sub>
 
 </div>
 
@@ -116,7 +116,7 @@ GitHub 的 Releases **页面**在中国大陆可以打开，但**挂在上面的
 **请用下面这个地址**——文件完全相同，并且已经由中国大陆用户实测，69 MB 可以完整
 下载：
 
-**⬇ [https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk)**
+**⬇ [https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk)**
 
 装好之后，应用内的更新检查也走这个地址，所以后续更新可以正常收到。
 
@@ -126,8 +126,8 @@ GitHub 的 Releases **页面**在中国大陆可以打开，但**挂在上面的
 
 | 地址 | 中国大陆可访问 |
 |---|---|
-| [`pub-…r2.dev`](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk) | ✅ 可以——已实测 |
-| [`dl.dlany.uk`](https://dl.dlany.uk/MiO-v1.0.1.apk) | ❌ 不行 |
+| [`pub-…r2.dev`](https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.1.0.apk) | ✅ 可以——已实测 |
+| [`dl.dlany.uk`](https://dl.dlany.uk/MiO-v1.1.0.apk) | ❌ 不行 |
 | [GitHub Releases 附件](https://github.com/DylanYu314/MiO-releases/releases/latest) | ❌ 不行——页面能打开，下载会失败 |
 
 ---
@@ -247,5 +247,6 @@ npm run test:e2e      # Playwright，对着真实后端和一个用完即弃的�
 
 ## 许可证
 
-[GNU AGPL-3.0](./LICENSE)。与 YouTube、Spotify、哔哩哔哩、网易云音乐、QQ 音乐或酷狗
+版权所有 © 2026 Dylan Yu。自由软件，采用
+[GNU AGPL-3.0](./LICENSE) 许可。与 YouTube、Spotify、哔哩哔哩、网易云音乐、QQ 音乐或酷狗
 均无关联。
