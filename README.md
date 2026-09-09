@@ -25,7 +25,7 @@ subscription, and nothing to sign up for.
 
 <a href="https://github.com/DylanYu314/MiO-releases/releases/latest"><img alt="Download for Android" src="https://img.shields.io/badge/Download%20for%20Android-8B5CF6?style=for-the-badge&logo=android&logoColor=white"></a>
 
-<sub>Also at <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> · This repository holds <b>releases only</b> — the source is not here</sub>
+<sub>Also at <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> · This repository holds <b>releases only</b>; the source lives in <a href="https://github.com/DylanYu314/MiO">DylanYu314/MiO</a>, which is private for now</sub>
 
 </div>
 

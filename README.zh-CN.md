@@ -24,7 +24,7 @@
 
 <a href="https://pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev/MiO-v1.0.1.apk"><img alt="下载安卓版" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD%E5%AE%89%E5%8D%93%E7%89%88-8B5CF6?style=for-the-badge&logo=android&logoColor=white"></a>
 
-<sub>本仓库<b>只存放发布版本</b>，源码不在这里</sub>
+<sub>本仓库<b>只存放发布版本</b>；源码在 <a href="https://github.com/DylanYu314/MiO">DylanYu314/MiO</a>，目前仍是私有仓库</sub>
 
 </div>
 
