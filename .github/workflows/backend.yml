@@ -1,0 +1,57 @@
+name: Backend
+
+# Runs on every push to a PR and on main. Actions is free inside the monthly
+# allowance, so the only thing worth skipping is a change that *cannot* break
+# anything: documentation.
+#
+# This is a denylist on purpose. An allowlist of the directories each job cares
+# about looks tidier and is a trap — anything nobody remembered to list, such as
+# docker-compose.yml or .pre-commit-config.yaml, would silently run no CI at all.
+on:
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - "mobile/**"
+      - "frontend/**"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - "mobile/**"
+      - "frontend/**"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.12"
+
+      # Every version comes from the committed uv.lock (#290), so this run
+      # installs what the images install and what the last green run installed.
+      # `--frozen` fails rather than re-resolving, which is what catches a
+      # pyproject.toml edited without a re-lock — the lock going stale in
+      # silence would put the reproducibility straight back.
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Lint (ruff check)
+        run: ruff check .
+
+      - name: Format check (ruff format)
+        run: ruff format --check .
+
+      - name: Test (pytest, with coverage)
+        run: pytest --cov=app --cov-report=term-missing

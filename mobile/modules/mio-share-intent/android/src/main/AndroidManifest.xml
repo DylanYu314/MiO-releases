@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Nothing to declare. The `ACTION_SEND` filter belongs on the app's *main
+       activity*, which is `app.json`'s `android.intentFilters` — a filter here
+       would be on a library with no activity and would do nothing. -->
+</manifest>

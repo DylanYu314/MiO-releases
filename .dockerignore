@@ -1,0 +1,37 @@
+# The build context for the web image is the *repo root*, because the frontend
+# depends on `shared/` through a file: path (ADR-016) and Docker cannot copy from
+# outside its context.
+#
+# That makes the default context enormous — mobile/node_modules alone is larger
+# than everything the image needs. Exclude what the web build has no use for.
+
+.git/
+.github/
+
+# Neither is part of the web client.
+backend/
+mobile/
+
+# Reinstalled inside the image by `npm ci`, and a host copy would be the wrong
+# platform's binaries.
+**/node_modules/
+
+# Build outputs and test artifacts — regenerated, never copied in.
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+
+# Prose. Changing a doc should not invalidate the image layer cache.
+docs/
+*.md
+
+# Local compose configuration, which can hold secrets.
+.env
+.env.prod
+
+# Credentials mounted at runtime, never baked in (#177).
+secrets/

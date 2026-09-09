@@ -1,0 +1,7 @@
+{
+  "name": "mio-media-session",
+  "version": "0.1.0",
+  "description": "One app-owned MediaSession, so the lock screen keeps its metadata across a track change and offers next/previous (#395, #396, #397)",
+  "main": "index.ts",
+  "private": true
+}

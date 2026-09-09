@@ -1,0 +1,58 @@
+name: Frontend
+
+# Runs on every push to a PR and on main. Actions is free inside the monthly
+# allowance, so the only thing worth skipping is a change that *cannot* break
+# anything: documentation.
+#
+# This is a denylist on purpose. An allowlist of the directories each job cares
+# about looks tidier and is a trap — anything nobody remembered to list, such as
+# docker-compose.yml or .pre-commit-config.yaml, would silently run no CI at all.
+on:
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - "mobile/**"
+      - "backend/**"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - "mobile/**"
+      - "backend/**"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Format check (prettier)
+        run: npm run format:check
+
+      - name: Typecheck (tsc)
+        run: npm run typecheck
+
+      - name: Test (vitest)
+        run: npm run test
+
+      - name: Build
+        run: npm run build

@@ -1,0 +1,8 @@
+{
+  "name": "@mio/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Design tokens and the i18n catalogue, shared by the web client and the Android app.",
+  "main": "tokens.ts",
+  "types": "tokens.ts"
+}

@@ -6,16 +6,16 @@
 
 **Your music, on your phone.**
 
-A free music library manager for Android. Import from the services you already
-use, and keep the result as files on your own device — no account, no
-subscription, and nothing to sign up for.
+A local-first music library manager for Android. The library, the downloads and the
+playback all happen on the device — no account, no subscription, and no server
+holding your music.
 
 <p>
   <a href="https://github.com/DylanYu314/MiO-releases/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/DylanYu314/MiO-releases?label=release&color=8B5CF6"></a>
-  <img alt="Platform" src="https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white">
-  <img alt="Size" src="https://img.shields.io/badge/size-69%20MB-informational">
-  <img alt="No ads, no account" src="https://img.shields.io/badge/no%20ads%20%C2%B7%20no%20account-1f6feb">
-  <a href="https://www.gnu.org/licenses/agpl-3.0.html"><img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Android%207.0%2B-3DDC84?logo=android&logoColor=white">
+  <img alt="Built with Expo" src="https://img.shields.io/badge/React%20Native-Expo%2057-000020?logo=expo&logoColor=white">
+  <img alt="Backend" src="https://img.shields.io/badge/backend-FastAPI-009688?logo=fastapi&logoColor=white">
+  <a href="./LICENSE"><img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
 </p>
 
 <p>
@@ -25,7 +25,7 @@ subscription, and nothing to sign up for.
 
 <a href="https://github.com/DylanYu314/MiO-releases/releases/latest"><img alt="Download for Android" src="https://img.shields.io/badge/Download%20for%20Android-8B5CF6?style=for-the-badge&logo=android&logoColor=white"></a>
 
-<sub>Also at <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> · This repository holds <b>releases only</b>; the source lives in <a href="https://github.com/DylanYu314/MiO">DylanYu314/MiO</a>, which is private for now</sub>
+<sub>Also at <a href="https://mio.dlany.uk/download/">mio.dlany.uk/download</a> · <a href="https://mio.dlany.uk">Website</a> · <a href="https://mio.dlany.uk/privacy/">Privacy</a></sub>
 
 </div>
 
@@ -34,16 +34,61 @@ subscription, and nothing to sign up for.
 
 ---
 
-## What MiO does
+> **For personal use, with content you have the right to download.** MiO is free.
+> Nothing is sold and no service is operated — donations, if any, grant no
+> features, no tier and no key.
 
-|  |  |
+> **About this repository.** This is MiO's **release repository**: the source as
+> published, plus every build. Development happens in a private repository, so
+> the history here starts at the first public release rather than at the first
+> commit — the code is all of it, the commit log is not.
+
+## Contents
+
+- [What MiO is](#what-mio-is)
+- [Features](#features)
+- [Installing](#installing)
+- [Updates](#updates)
+- [Downloading from mainland China](#china)
+- [How it works](#how-it-works)
+- [Tech stack](#tech-stack)
+- [Repository layout](#repository-layout)
+- [Running it](#running-it)
+- [Development](#development)
+- [Licence](#licence)
+
+## What MiO is
+
+MiO turns a link, a search or a playlist from somewhere else into audio files that
+live on the phone. It imports from Spotify, YouTube, Bilibili, NetEase Cloud
+Music, QQ Music and Kugou; it scores every match and shows them for review before
+a single byte is downloaded; and it plays what it collects with lock-screen
+controls, a ten-band equaliser, crossfade and a sleep timer.
+
+**The app needs no server.** Installing the APK gets a complete music app — the
+library, search, downloads, imports and playback all run on the device, and the
+audio is fetched by the phone itself. One optional feature, *Other sites*, hands a
+link to yt-dlp for the hundreds of sites the phone has no extractor for; that is
+the only part that needs a backend, and it is one you run yourself
+— the Python service in this repository, which you run yourself.
+
+Released and publicly downloadable: **v1.0.1**, Android 7.0+, 64- and 32-bit ARM,
+69 MB. Builds are published from
+[`DylanYu314/MiO-releases`](https://github.com/DylanYu314/MiO-releases), which is
+where the APK, the release notes and the update manifest live.
+
+## Features
+
+| | |
 |---|---|
-| 🔁 **Brings your playlists with you** | Import from Spotify, YouTube, Bilibili, NetEase Cloud Music, QQ Music and Kugou. Every match is shown to you first — nothing downloads until you say so |
-| 🎧 **Plays them properly** | Lock-screen and Bluetooth controls, a real queue with shuffle and repeat, crossfade, a ten-band equaliser, volume levelling and a sleep timer |
-| 💾 **Keeps them on your phone** | The music, the playlists and the library are files on your device. They work with no signal, and they do not disappear when a subscription does |
-| 📤 **Moves to your next phone** | Export the library to a file and load it on the new one |
-| 🌍 **Speaks your language** | English, 简体中文, Español, Français, 日本語, 한국어, Русский |
-| 🔒 **Asks for nothing** | No account, no adverts, no tracking, no paid tier |
+| 🎧 **A real player** | Lock-screen and Bluetooth controls, a proper queue with shuffle and repeat, crossfade, a ten-band equaliser, mono, balance, volume levelling and a sleep timer |
+| 📥 **Three ways to add music** | Paste a link, search, or import a playlist — and in all three the phone fetches its own audio |
+| 🔁 **Playlist import** | Spotify, YouTube, Bilibili, NetEase Cloud Music, QQ Music and Kugou. Matches are scored and reviewable; nothing downloads until you confirm |
+| 💾 **Local-first** | Library, playlists, favourites and audio files live on the device, in SQLite and ordinary files. There is no account and nothing to sign up for |
+| 📤 **Copy a library between phones** | Export to a versioned JSON file and load it on another device. No audio is transferred — the receiving phone fetches its own |
+| 🔄 **Updates that arrive on their own** | Most fixes download in the background and apply on the next launch; the app says so when a new APK is genuinely needed |
+| 🌍 **Seven languages** | English, 简体中文, Español, Français, 日本語, 한국어, Русский |
+| 🔒 **No telemetry** | No adverts, no tracking, no paid tier. The diagnostics log carries no song titles and no personal details, and stays on the phone unless you point MiO at a server of your own |
 
 ## Installing
 
@@ -98,28 +143,125 @@ All three are the same file, byte for byte.
 | [`dl.dlany.uk`](https://dl.dlany.uk/MiO-v1.0.1.apk) | ❌ no |
 | [GitHub release asset](https://github.com/DylanYu314/MiO-releases/releases/latest) | ❌ no — the page loads, the download fails |
 
-## What MiO does not do
-
-- **It does not sell anything.** There is no paid tier, no unlock and no
-  supporter-only feature. Donations, if any, grant nothing.
-- **It does not send your library, your listening or your identity anywhere.**
-- **It does not share audio between users.** Every phone fetches its own.
-
-## Something not working?
-
-Open **Settings → Diagnostics** in the app and tap **Copy report**, then send it
-through the report form linked on that screen. The report is what the app
-recorded about itself — no song titles, no personal details.
-
 ---
 
-<div align="center">
+## How MiO is built
 
-Free software under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) ·
-[Privacy](https://mio.dlany.uk/privacy/) ·
-[Website](https://mio.dlany.uk)
+The rest of this page is for anyone reading the code.
 
-<sub>Not affiliated with YouTube, Spotify, Bilibili, NetEase Cloud Music, QQ Music or Kugou.<br>
-<code>version.json</code> in this repository is what the app reads to find a new release. It is generated from the APK, so it cannot disagree with it.</sub>
+## How it works
 
-</div>
+The phone is the origin. It holds the library and it fetches its own audio,
+because a server cannot do that job: YouTube refuses a datacentre address on
+every client — measured at **1 import in 14** — while a phone on a residential
+connection is not refused.
+
+```mermaid
+flowchart LR
+    subgraph phone["📱 Android app — the whole product"]
+        UI["Library · Player · Playlists"]
+        DB[("SQLite<br/>+ audio files")]
+        FETCH["Extractors<br/>YouTube · Bilibili · Spotify<br/>NetEase · QQ · Kugou"]
+        UI <--> DB
+        UI --> FETCH
+    end
+
+    FETCH -->|"audio, straight to the device"| SERVICES(("Music<br/>services"))
+
+    subgraph server["🖥️ Optional — a server you run yourself"]
+        API["FastAPI + Celery"]
+        YTDLP["yt-dlp"]
+        API --> YTDLP
+    end
+
+    UI -.->|"only 'Other sites'"| API
+    YTDLP -.-> SERVICES
+```
+
+## Tech stack
+
+| | |
+|---|---|
+| **Android app** | React Native 0.86 · Expo SDK 57 · TypeScript · expo-router · SQLite (`expo-sqlite`) · Zustand · TanStack Query · i18next |
+| **Native modules** | Kotlin — a ten-band equaliser over `DynamicsProcessing`, a media3 `MediaSession`, a `dataSync` foreground service, and a share-intent reader. Two Expo config plugins patch `expo-audio` at prebuild for a single media session and a mono audio processor |
+| **Backend** (optional) | Python 3.12 · FastAPI · Celery + Redis · SQLAlchemy 2.0 + Alembic · SQLite · yt-dlp + ffmpeg + mutagen |
+| **Website** | React · TypeScript · Vite · Tailwind CSS — the download and privacy pages at `mio.dlany.uk` |
+| **Tooling** | Docker · GitHub Actions · Renovate · ruff · ESLint + Prettier · jest · Vitest · Playwright · EAS |
+
+## Repository layout
+
+```
+mobile/     The Android app — this is the product
+  app/        expo-router screens (library, player, playlists, add, settings)
+  src/        library, player store, extractors, i18n, diagnostics
+  modules/    Kotlin native modules
+  plugins/    Expo config plugins that patch expo-audio at prebuild
+backend/    Optional FastAPI service: import pipeline, Celery tasks, yt-dlp
+frontend/   The website: the download and privacy pages
+shared/     Design tokens and the i18n catalogues both clients build against
+docs/adr/   Architecture decision records — one file per decision
+logo/       The master mark; every app icon is generated from it
+```
+
+## Running it
+
+**The app.** A release APK is at [mio.dlany.uk/download](https://mio.dlany.uk/download/)
+or in the [releases repository](https://github.com/DylanYu314/MiO-releases/releases/latest).
+To run it from source you need a development build — Expo Go cannot work here,
+because the lock-screen controls come from config plugins that never reach its
+prebuilt binary:
+
+```bash
+cd mobile
+npm install
+npx expo start --dev-client
+```
+
+Most JavaScript changes ship over the air and never need a rebuild; native code
+does, and `npm run ota:check` is what decides which.
+
+**The optional backend**, from the repository root:
+
+```bash
+docker compose up --build   # Redis, the API on :8000, and a worker
+```
+
+Swagger UI is at `http://localhost:8000/docs`.
+
+⛔ **Mint an access key before opening a port to the internet.** `POST /jobs` is
+the only endpoint that costs a server anything, and it is gated for that reason:
+`docker compose exec backend python -m scripts.access_keys create --label "…"`
+prints a token once.
+
+> Rebuild with `--build` after changing `backend/pyproject.toml` — the code is
+> mounted into the containers, but dependencies are baked into the image. And
+> restart the worker after backend changes: unlike the API, it does not
+> hot-reload.
+
+**The website**, from `frontend/` (Node 22+):
+
+```bash
+npm install
+npm run dev                 # http://localhost:5173
+```
+
+## Development
+
+```bash
+# mobile/
+npm run typecheck && npm run lint && npm run format:check && npm test
+
+# backend/  (needs uv)
+uv sync --frozen && alembic upgrade head
+ruff check . && ruff format --check . && pytest
+
+# frontend/
+npm run lint && npm run format:check && npm run typecheck
+npm run test          # Vitest
+npm run test:e2e      # Playwright, against a real backend on a disposable database
+```
+
+## Licence
+
+[GNU AGPL-3.0](./LICENSE). Not affiliated with YouTube, Spotify, Bilibili,
+NetEase Cloud Music, QQ Music or Kugou.

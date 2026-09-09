@@ -1,0 +1,25 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!--
+    Declared here so the module is self-describing, and repeated in
+    mobile/app.json the way the equaliser's MODIFY_AUDIO_SETTINGS is.
+
+    FOREGROUND_SERVICE_DATA_SYNC is the one that matters and the one that is
+    easy to get wrong: since Android 14 every foreground service must name a
+    type, must hold the permission for that type, and `mediaPlayback` — which
+    the app already has, for expo-audio — may only be used while media is
+    actually playing. An import is not that.
+  -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+  <!-- Android 13+ will not show the notification without it. The service still
+       runs if it is refused; the user simply cannot see what is running, which
+       is worth asking for rather than assuming. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <application>
+    <service
+      android:name=".MioForegroundTaskService"
+      android:exported="false"
+      android:foregroundServiceType="dataSync" />
+  </application>
+</manifest>

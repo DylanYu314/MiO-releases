@@ -1,0 +1,85 @@
+# The shared edge proxy: the only thing on the box listening on 80/443.
+#
+# ## Why this exists as its own project
+#
+# Caddy used to live *inside* the MiO stack, which made the box single-tenant by
+# accident rather than by decision: one container can bind :443, that container
+# was built from `frontend/Dockerfile`, and its config was baked into MiO's
+# image. Hosting anything else meant editing MiO's Caddyfile and rebuilding
+# MiO's web image to deploy an unrelated application.
+#
+# Now the proxy owns the ports and nothing else, MiO is one upstream behind it,
+# and a second project is a second site block plus a shared network. Deploying
+# either one no longer restarts the other's front door.
+#
+# ⚠️ **This file is bind-mounted, not baked.** Adding a site is an edit plus
+# `docker compose -p proxy exec caddy caddy reload --config /etc/caddy/Caddyfile`,
+# with no image rebuild and no downtime for anything already running.
+
+# There is deliberately no global `email` option — see the note in MiO's own
+# Caddyfile. An unset variable expands to a bare `email`, which is a parse
+# error, and a parse error takes every site on the box down at once. That blast
+# radius is larger here than it used to be, which is the cost of sharing.
+
+# --- MiO -------------------------------------------------------------------
+#
+# `mio-web` is a network alias on the shared `edge` network, set explicitly in
+# `docker-compose.prod.yml` rather than left to Compose's default.
+#
+# ⛔ The default alias is the *service name*, and service names are only unique
+# within a project. Two projects that both call a service `web` would collide on
+# a shared network and resolve to whichever container answered first. Every
+# upstream added here must carry an explicit, globally unique alias.
+#
+# TLS is terminated here, so MiO's internal Caddy serves plain HTTP on :80 and
+# never sees a certificate. `reverse_proxy` sets `X-Forwarded-Proto` on its own,
+# so the upstream can still tell what the browser used.
+{$MIO_DOMAIN} {
+	# The origin certificate, when there is one.
+	#
+	# ## Why this is an import and not a `tls` line
+	#
+	# `mio.dlany.uk` is proxied through Cloudflare (orange cloud) because China
+	# blocks the DigitalOcean address, not the hostname — measured 2026-09-07 by
+	# a friend in Shanghai, before and after the change. Behind that proxy Caddy
+	# cannot renew from Let's Encrypt the way it used to: the default
+	# TLS-ALPN-01 challenge needs to terminate TLS, and Cloudflare terminates it
+	# first. A certificate that stops renewing takes the whole site down and
+	# says nothing until the day it expires.
+	#
+	# So the droplet serves a **Cloudflare Origin Certificate** instead — valid
+	# 15 years, trusted by Cloudflare, and never renewed. It lives in
+	# `proxy/certs/`, which is gitignored because it contains a private key.
+	#
+	# ⛔ **A bare `tls` line here would break CI.** `deploy-stack` boots this
+	# same file with `MIO_DOMAIN=localhost` and no certificates on disk, and
+	# Caddy refuses to load a `tls` directive whose files are missing. An import
+	# glob matching nothing is a *warning* — the same property the sites import
+	# below relies on, measured again for this one: an empty directory validates
+	# and falls through to automatic HTTPS, which is exactly what CI wants.
+	#
+	# ⚠️ **An origin certificate is trusted by Cloudflare, not by browsers.** The
+	# orange cloud has to stay on. Turning it off serves an untrusted cert to
+	# everyone; the way back is to delete `proxy/certs/tls.caddy` and reload,
+	# which restores Let's Encrypt.
+	import /etc/caddy/certs/*.caddy
+
+	reverse_proxy mio-web:80
+}
+
+# --- Other projects --------------------------------------------------------
+#
+# Drop a `<name>.caddy` file into the sites directory (mounted at
+# /etc/caddy/sites) and reload. Nothing in this repo needs to change, which is
+# the whole point of the split.
+#
+#   example.com {
+#       reverse_proxy myproject-web:8080
+#   }
+#
+# ⚠️ Matching nothing is a *warning*, not an error — measured, not assumed,
+# because an import that failed closed would mean an empty sites directory takes
+# every site on the box down. `caddy validate` against an empty directory logs
+# `"msg":"No files matching import glob pattern"` and still prints
+# `Valid configuration` with exit 0.
+import /etc/caddy/sites/*.caddy

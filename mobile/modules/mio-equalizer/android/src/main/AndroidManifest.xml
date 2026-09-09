@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Attaching an AudioEffect needs this. It is already requested by the app
+       (mobile/app.json), and repeated here so the module is self-describing. -->
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+</manifest>

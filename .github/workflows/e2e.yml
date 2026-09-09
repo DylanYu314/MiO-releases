@@ -1,0 +1,90 @@
+name: E2E
+
+# Runs on every push to a PR and on main. Actions is free inside the monthly
+# allowance, so the only thing worth skipping is a change that *cannot* break
+# anything: documentation.
+#
+# This is a denylist on purpose. An allowlist of the directories each job cares
+# about looks tidier and is a trap — anything nobody remembered to list, such as
+# docker-compose.yml or .pre-commit-config.yaml, would silently run no CI at all.
+on:
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - "mobile/**"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - "mobile/**"
+
+jobs:
+  e2e:
+    # A real browser against a real backend: catches the integration seams the
+    # unit suites can't, since each of those fakes the other side.
+    runs-on: ubuntu-latest
+    # A whole-job ceiling: the suite runs in ~3 min, so anything near this is a
+    # hang (the browser-install step stalled once with no bound of its own).
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.12"
+
+      # From the committed uv.lock (#290) — same versions as CI and the images.
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync --frozen
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Cache the downloaded browser between runs; the key follows the pinned
+      # @playwright/test version in the lockfile.
+      - name: Playwright version
+        id: pw
+        working-directory: frontend
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      # The browser binary is cached; its system libraries are not, so install
+      # those every run but the (slow, hang-prone) browser download only on a miss.
+      - name: Install Playwright system dependencies
+        timeout-minutes: 5
+        working-directory: frontend
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright browser
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
+        working-directory: frontend
+        run: npx playwright install chromium
+
+      - name: Test (playwright)
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7

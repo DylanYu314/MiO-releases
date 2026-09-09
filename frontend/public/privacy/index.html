@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>MiO — Privacy</title>
+    <meta
+      name="description"
+      content="What MiO does with your data. The app collects nothing: no accounts, no analytics, no crash reporting."
+    />
+    <style>
+      /*
+        Deliberately one self-contained file, not part of the React app (#517).
+
+        The web client is parked (#481) and this page has to keep working
+        whatever happens to it — it is where a stranger arrives. It is also the
+        page someone reads when an app they just installed is refusing to open,
+        so it must not depend on a bundle loading.
+      */
+      :root {
+        --bg: #ffffff;
+        --surface: #f4f4f5;
+        --text: #18181b;
+        --muted: #52525b;
+        --border: #e4e4e7;
+        --accent: #542d7e;
+        --accent-text: #ffffff;
+        --warn-bg: #fff7ed;
+        --warn-border: #fed7aa;
+        --warn-text: #7c2d12;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --surface: #18181b;
+          --text: #fafafa;
+          --muted: #a1a1aa;
+          --border: #27272a;
+          --accent: #a78bfa;
+          --accent-text: #1e1b2e;
+          --warn-bg: #26190d;
+          --warn-border: #572f14;
+          --warn-text: #fed7aa;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 2rem 1.25rem 4rem;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.65 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      h1 {
+        font-size: 2.25rem;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.02em;
+      }
+      .tagline {
+        color: var(--muted);
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .cta {
+        display: block;
+        text-align: center;
+        background: var(--accent);
+        color: var(--accent-text);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        margin: 0 auto 0.75rem;
+        max-width: 26rem;
+      }
+      .cta:hover {
+        filter: brightness(1.08);
+      }
+      .cta-note {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0 0 2.5rem;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 2.5rem 0 0.75rem;
+      }
+      .warn {
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-border);
+        color: var(--warn-text);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+      }
+      .warn strong {
+        display: block;
+        margin-bottom: 0.35rem;
+      }
+      ol,
+      ul {
+        padding-left: 1.25rem;
+      }
+      li {
+        margin: 0.4rem 0;
+      }
+      .facts {
+        list-style: none;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        overflow: hidden;
+      }
+      .facts li {
+        margin: 0;
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .facts li:last-child {
+        border-bottom: none;
+      }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        background: var(--surface);
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.25rem;
+        font-size: 0.9em;
+      }
+      .langbar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.4rem;
+      }
+      .langbar select {
+        font: inherit;
+        font-size: 0.9rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        border: 1px solid var(--line, #d5d5dd);
+        background: transparent;
+        color: inherit;
+      }
+      .lang-note {
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <nav class="langbar">
+          <select id="lang" aria-label="Language">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="ru">Русский</option>
+          </select>
+          <span class="lang-note" id="machine-note" hidden
+            >Translation for convenience — the English text is authoritative.</span
+          >
+        </nav>
+        <h1 data-i18n="h1">Privacy</h1>
+        <p class="tagline" data-i18n="tagline">
+          What MiO does with your data. Short, because it does very little.
+        </p>
+      </header>
+
+      <div class="warn" data-i18n="warn">
+        <strong>The app collects nothing.</strong>
+        MiO has no accounts, no sign-up, no analytics and no crash reporting. Your library,
+        playlists, favourites and listening history are stored on your phone and are never sent
+        anywhere.
+      </div>
+
+      <h2 data-i18n="h2App">The app</h2>
+      <ul>
+        <li data-i18n="app1">
+          <strong>No MiO server holds your music.</strong> It is downloaded straight from the
+          service to your device. This website has a server behind it; the app does not use it.
+        </li>
+        <li data-i18n="app2">
+          There is no advertising identifier, no device fingerprinting and no third-party analytics
+          or crash-reporting software in the app.
+        </li>
+        <li data-i18n="app3">
+          Uninstalling MiO removes everything it stored, because everything it stored was on your
+          phone.
+        </li>
+        <li data-i18n="app4">
+          Copying your library to another phone writes a file to a folder you choose. It lists what
+          is in your library — titles and links, not the audio — and it goes nowhere except where
+          you put it. The other phone downloads its own copies.
+        </li>
+      </ul>
+
+      <h2 data-i18n="h2Auto">What the app contacts by itself</h2>
+      <p data-i18n="autoIntro">Two things, each time you open it:</p>
+      <ul class="facts">
+        <li data-i18n="auto1">
+          <strong>Expo</strong> (<code>u.expo.dev</code>) — checks whether a fix is available. It
+          receives your app’s version, not anything about you.
+        </li>
+        <li data-i18n="auto2">
+          <strong>Cloudflare</strong> (<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev</code> and
+          <code>dl.dlany.uk</code>) — reads a small file listing the newest release. It is a plain
+          request for a public file.
+        </li>
+        <li data-i18n="auto3">
+          <strong>GitHub</strong> (<code>raw.githubusercontent.com</code>) — the same file, asked
+          for only if the first request fails. GitHub is unreachable from some countries, which is
+          why there are two.
+        </li>
+      </ul>
+      <p data-i18n="autoNote">
+        Like any request over the internet, these tell Expo, Cloudflare and GitHub the internet
+        address you are connecting from. None of them is sent anything that identifies you as a MiO
+        user, and none is told what is in your library.
+      </p>
+
+      <h2 data-i18n="h2Asked">What the app contacts when you ask it to</h2>
+      <p data-i18n="asked1">
+        Only in response to something you do, and only for the feature you used:
+        <strong>YouTube</strong>, <strong>Bilibili</strong>, <strong>NetEase Cloud Music</strong>,
+        <strong>QQ Music</strong>, <strong>Kugou</strong> when you search, add a link or import a
+        playlist; and <strong>Spotify</strong> if you connect a Spotify account to import from it.
+      </p>
+      <p data-i18n="asked2">
+        Those services receive your request and your internet address, and their own privacy
+        policies apply to what they do with it. MiO does not send them anything about you beyond
+        what the request itself requires.
+      </p>
+      <p data-i18n="asked3">
+        The donate button opens <strong>Ko-fi</strong> (<code>ko-fi.com</code>) in your browser. MiO
+        has no payment system of its own: it opens a link, sends Ko-fi nothing about you, and is
+        never told whether you gave anything.
+      </p>
+
+      <h2 data-i18n="h2Diag">Diagnostics</h2>
+      <p data-i18n="diag1">
+        MiO keeps a short record of what it has been doing — imports, playback and requests that
+        failed — <strong>on your phone</strong>. It is not uploaded. The one exception is if you
+        have pointed MiO at a server you run yourself, in which case it is sent there once a day,
+        and nowhere else.
+      </p>
+      <p data-i18n="diag2">
+        It deliberately contains <strong>no song titles, no artists and no links</strong>. If you
+        use <em>Copy report</em> or <em>Share</em>, that record leaves your device only because you
+        pressed the button, and only to wherever you choose to send it.
+      </p>
+
+      <h2 data-i18n="h2Site">This website</h2>
+      <p data-i18n="site1">
+        These pages (<code>mio.dlany.uk</code>) are served through <strong>Cloudflare</strong>,
+        which sits between you and the server. Cloudflare therefore sees requests for this site,
+        including the internet address they come from, and keeps its own logs of them. The server
+        behind it keeps ordinary access logs for security and troubleshooting.
+      </p>
+      <p data-i18n="site2">
+        There are no cookies, no trackers and no advertising on these pages. The download page
+        remembers your language choice in your own browser; that never leaves your device.
+      </p>
+
+      <h2 data-i18n="h2Form">The problem-report form</h2>
+      <p data-i18n="form1">
+        If you report a problem, the form is hosted by <strong>Tally</strong> and your answers are
+        stored there. It asks what went wrong and for the diagnostics report.
+        <strong>An email address is optional</strong> and is used only to reply to you about that
+        report — never for anything else, and never shared.
+      </p>
+      <p data-i18n="formOnly">This is the only place MiO asks you for personal information.</p>
+
+      <h2 data-i18n="h2Rights">Your rights</h2>
+      <p data-i18n="rights1">
+        Because the app stores nothing about you, there is generally nothing to request, correct or
+        delete. The exception is a report you have sent through the form: you can ask for it to be
+        deleted, and it will be.
+      </p>
+      <p data-i18n="rights2">
+        To ask about anything on this page, use the
+        <a href="https://tally.so/r/J9EbDd">report form</a>.
+      </p>
+
+      <h2 data-i18n="h2Changes">Changes</h2>
+      <p data-i18n="changes1">
+        If MiO starts doing something this page does not describe, this page changes first. The date
+        below says when it was last revised.
+      </p>
+
+      <footer>
+        <p>Last updated 7 September 2026.</p>
+        <p>
+          <a href="/download/">Download MiO</a> · Free software under
+          <a href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL-3.0</a>.
+        </p>
+      </footer>
+    </main>
+    <script>
+      /*
+        Translations for this page.
+
+        ⛔ **English is authoritative, and the page says so in every language.**
+        This is a privacy policy, not marketing copy: a mistranslation would
+        misstate what data is collected. Only the Chinese has been read by
+        someone who speaks it — the rest are machine translations, the same
+        admission the app makes about its own catalogues (#519). The note beside
+        the picker appears for every language except English.
+
+        The English text lives in the markup and this script only replaces it,
+        so a reader whose JavaScript fails loses the picker rather than the
+        policy. `innerHTML` is used because several clauses carry `<strong>`,
+        `<code>` and links; every value here is a literal in this file and
+        nothing from the network is ever written this way.
+      */
+      var I18N = {
+        zh: {
+          h1: '隐私',
+          tagline: 'MiO 如何处理你的数据。内容很短，因为它做得很少。',
+          warn: '<strong>本应用不收集任何信息。<\/strong> MiO 没有账号、没有注册、没有统计分析、没有崩溃上报。你的音乐库、播放列表、收藏和播放记录都保存在你的手机上，绝不会发送到任何地方。',
+          h2App: '关于应用',
+          app1: '<strong>没有任何 MiO 服务器保管你的音乐。<\/strong>音乐直接从对应服务下载到你的设备。本网站背后有一台服务器，但应用不会使用它。',
+          app2: '应用中没有广告标识符、没有设备指纹识别，也没有任何第三方统计或崩溃上报组件。',
+          app3: '卸载 MiO 会删除它保存的一切，因为它保存的一切本来就在你的手机上。',
+          app4: '把音乐库复制到另一台手机时，会向你选择的文件夹写入一个文件。它列出的是音乐库里有什么——标题和链接，不是音频本身——并且只会留在你放它的地方。另一台手机会自己去下载。',
+          h2Auto: '应用自行联网的部分',
+          autoIntro: '每次打开时，只有两类：',
+          auto1:
+            '<strong>Expo<\/strong>（<code>u.expo.dev<\/code>）——检查是否有可用的修复。它收到的是你的应用版本号，而不是关于你的任何信息。',
+          auto2:
+            '<strong>Cloudflare<\/strong>（<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev<\/code> 和 <code>dl.dlany.uk<\/code>）——读取一个列出最新版本的小文件。这只是一次对公开文件的普通请求。',
+          auto3:
+            '<strong>GitHub<\/strong>（<code>raw.githubusercontent.com<\/code>）——同一个文件，仅在上一个请求失败时才会请求。部分国家和地区无法访问 GitHub，这正是设置两个来源的原因。',
+          autoNote:
+            '和任何互联网请求一样，这些请求会让 Expo、Cloudflare 和 GitHub 知道你所使用的网络地址。它们都不会收到任何能表明你是 MiO 用户的信息，也不会知道你的音乐库里有什么。',
+          h2Asked: '应用在你主动操作时联网的部分',
+          asked1:
+            '仅在你操作之后，且仅为你所使用的功能：当你搜索、添加链接或导入播放列表时，会访问 <strong>YouTube<\/strong>、<strong>哔哩哔哩<\/strong>、<strong>网易云音乐<\/strong>、<strong>QQ 音乐<\/strong>、<strong>酷狗<\/strong>；如果你连接了 Spotify 账号用于导入，则会访问 <strong>Spotify<\/strong>。',
+          asked2:
+            '这些服务会收到你的请求和你的网络地址，它们如何处理这些信息适用各自的隐私政策。除请求本身所必需的内容外，MiO 不会向它们发送任何关于你的信息。',
+          asked3:
+            '点击捐赠按钮会在浏览器中打开 <strong>Ko-fi<\/strong>（<code>ko-fi.com<\/code>）。MiO 自身没有任何支付功能：它只是打开一个链接，不会向 Ko-fi 发送任何关于你的信息，也无从得知你是否捐赠过。',
+          h2Diag: '诊断记录',
+          diag1:
+            'MiO 会把它自己做过的事——导入、播放和失败的请求——简要记录<strong>在你的手机上<\/strong>。这些记录不会被上传。唯一的例外是：如果你把 MiO 指向了自己搭建的服务器，它每天会向那台服务器发送一次，除此之外不会发往任何地方。',
+          diag2:
+            '记录中刻意<strong>不包含歌曲名称、艺人名称和任何链接<\/strong>。如果你使用<em>复制报告<\/em>或<em>分享<\/em>，这些记录离开你的设备完全是因为你按下了按钮，并且只会发送到你选择的地方。',
+          h2Site: '关于本网站',
+          site1:
+            '这些页面（<code>mio.dlany.uk<\/code>）通过 <strong>Cloudflare<\/strong> 提供服务，它位于你和服务器之间。因此 Cloudflare 会看到对本站的请求（包括请求来源的网络地址）并保留自己的日志。其后的服务器会出于安全和排查问题的目的保留常规访问日志。',
+          site2:
+            '这些页面没有 Cookie、没有追踪器、没有广告。下载页面会在你自己的浏览器中记住你选择的语言；该信息不会离开你的设备。',
+          h2Form: '问题反馈表单',
+          form1:
+            '如果你反馈问题，该表单由 <strong>Tally<\/strong> 托管，你的回答会保存在那里。表单会询问出了什么问题，并请你附上诊断报告。<strong>电子邮箱是可选的<\/strong>，仅用于就该反馈回复你——不作任何其他用途，也不会共享。',
+          formOnly: '这是 MiO 唯一向你索取个人信息的地方。',
+          h2Rights: '你的权利',
+          rights1:
+            '由于本应用不保存任何关于你的信息，通常没有可供查询、更正或删除的内容。例外是你通过表单提交的反馈：你可以要求删除它，我们会照做。',
+          rights2:
+            '如需就本页面的任何内容提问，请使用<a href="https://tally.so/r/J9EbDd">反馈表单<\/a>。',
+          h2Changes: '变更',
+          changes1:
+            '如果 MiO 开始做本页面未描述的事情，会先更新本页面。下方日期即为最后修订的时间。',
+        },
+        es: {
+          h1: 'Privacidad',
+          tagline: 'Qué hace MiO con tus datos. Es corto, porque hace muy poco.',
+          warn: '<strong>La aplicación no recopila nada.<\/strong> MiO no tiene cuentas, registro, analíticas ni informes de fallos. Tu biblioteca, listas, favoritos e historial se guardan en tu teléfono y nunca se envían a ningún sitio.',
+          h2App: 'La aplicación',
+          app1: '<strong>Ningún servidor de MiO guarda tu música.<\/strong> Se descarga directamente del servicio a tu dispositivo. Este sitio web tiene un servidor detrás; la aplicación no lo usa.',
+          app2: 'No hay identificador publicitario, ni huella digital del dispositivo, ni software de analíticas o informes de fallos de terceros.',
+          app3: 'Desinstalar MiO elimina todo lo que guardaba, porque todo lo que guardaba estaba en tu teléfono.',
+          app4: 'Copiar tu biblioteca a otro teléfono escribe un archivo en la carpeta que elijas. Enumera lo que hay en tu biblioteca —títulos y enlaces, no el audio— y no va a ningún sitio salvo donde tú lo pongas. El otro teléfono descarga sus propias copias.',
+          h2Auto: 'Con qué contacta la aplicación por sí sola',
+          autoIntro: 'Dos cosas, cada vez que la abres:',
+          auto1:
+            '<strong>Expo<\/strong> (<code>u.expo.dev<\/code>) — comprueba si hay una corrección disponible. Recibe la versión de tu aplicación, no nada sobre ti.',
+          auto2:
+            '<strong>Cloudflare<\/strong> (<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev<\/code> y <code>dl.dlany.uk<\/code>) — lee un archivo pequeño que indica la versión más reciente. Es una petición normal de un archivo público.',
+          auto3:
+            '<strong>GitHub<\/strong> (<code>raw.githubusercontent.com<\/code>) — el mismo archivo, solicitado solo si la petición anterior falla. GitHub no es accesible desde algunos países, por eso hay dos.',
+          autoNote:
+            'Como cualquier petición por internet, estas indican a Expo, Cloudflare y GitHub la dirección desde la que te conectas. A ninguno se le envía nada que te identifique como usuario de MiO, ni se le dice qué hay en tu biblioteca.',
+          h2Asked: 'Con qué contacta cuando tú se lo pides',
+          asked1:
+            'Solo como respuesta a algo que haces, y solo para la función que usaste: <strong>YouTube<\/strong>, <strong>Bilibili<\/strong>, <strong>NetEase Cloud Music<\/strong>, <strong>QQ Music<\/strong>, <strong>Kugou<\/strong> al buscar, añadir un enlace o importar una lista; y <strong>Spotify<\/strong> si conectas una cuenta de Spotify para importar desde ella.',
+          asked2:
+            'Esos servicios reciben tu petición y tu dirección de internet, y sus propias políticas de privacidad rigen lo que hacen con ella. MiO no les envía nada sobre ti más allá de lo que la petición requiere.',
+          asked3:
+            'El botón de donación abre <strong>Ko-fi<\/strong> (<code>ko-fi.com<\/code>) en tu navegador. MiO no tiene ningún sistema de pago propio: solo abre un enlace, no envía a Ko-fi nada sobre ti y nunca llega a saber si has donado.',
+          h2Diag: 'Diagnóstico',
+          diag1:
+            'MiO guarda un registro breve de lo que ha estado haciendo —importaciones, reproducción y peticiones fallidas— <strong>en tu teléfono<\/strong>. No se sube a ningún sitio. La única excepción es si has conectado MiO a un servidor que gestionas tú: en ese caso se envía allí una vez al día, y a ningún otro lugar.',
+          diag2:
+            'No contiene, deliberadamente, <strong>ni títulos de canciones, ni artistas, ni enlaces<\/strong>. Si usas <em>Copiar informe<\/em> o <em>Compartir<\/em>, ese registro sale de tu dispositivo solo porque pulsaste el botón, y solo hacia donde tú elijas enviarlo.',
+          h2Site: 'Este sitio web',
+          site1:
+            'Estas páginas (<code>mio.dlany.uk<\/code>) se sirven a través de <strong>Cloudflare<\/strong>, que se sitúa entre tú y el servidor. Cloudflare ve por tanto las peticiones a este sitio, incluida la dirección de internet de la que provienen, y guarda sus propios registros. El servidor detrás mantiene registros de acceso normales por seguridad y para resolver problemas.',
+          site2:
+            'No hay cookies, ni rastreadores, ni publicidad en estas páginas. La página de descarga recuerda tu idioma en tu propio navegador; eso nunca sale de tu dispositivo.',
+          h2Form: 'El formulario de incidencias',
+          form1:
+            'Si informas de un problema, el formulario está alojado por <strong>Tally<\/strong> y tus respuestas se guardan allí. Pregunta qué ha fallado y pide el informe de diagnóstico. <strong>El correo electrónico es opcional<\/strong> y se usa solo para responderte sobre ese informe — nunca para otra cosa, y nunca se comparte.',
+          formOnly: 'Este es el único lugar donde MiO te pide información personal.',
+          h2Rights: 'Tus derechos',
+          rights1:
+            'Como la aplicación no guarda nada sobre ti, en general no hay nada que solicitar, corregir o borrar. La excepción es un informe que hayas enviado por el formulario: puedes pedir que se elimine, y se eliminará.',
+          rights2:
+            'Para preguntar sobre cualquier cosa de esta página, usa el <a href="https://tally.so/r/J9EbDd">formulario<\/a>.',
+          h2Changes: 'Cambios',
+          changes1:
+            'Si MiO empieza a hacer algo que esta página no describe, esta página cambia primero. La fecha de abajo indica cuándo se revisó por última vez.',
+        },
+        fr: {
+          h1: 'Confidentialité',
+          tagline: "Ce que MiO fait de vos données. C'est court, parce qu'il en fait très peu.",
+          warn: "<strong>L'application ne collecte rien.<\/strong> MiO n'a ni compte, ni inscription, ni analytique, ni rapport de plantage. Votre bibliothèque, vos listes, vos favoris et votre historique restent sur votre téléphone et ne sont jamais envoyés nulle part.",
+          h2App: "L'application",
+          app1: "Il n'existe <strong>aucun serveur MiO<\/strong>. La musique est téléchargée directement depuis le service vers votre appareil.",
+          app2: "Aucun identifiant publicitaire, aucune empreinte d'appareil, aucun outil tiers d'analytique ou de rapport de plantage.",
+          app3: "Désinstaller MiO supprime tout ce qu'il avait enregistré, car tout était sur votre téléphone.",
+          app4: 'Copier votre bibliothèque vers un autre téléphone écrit un fichier dans le dossier que vous choisissez. Il énumère ce que contient votre bibliothèque — titres et liens, pas l’audio — et ne va nulle part ailleurs que là où vous le mettez. L’autre téléphone télécharge ses propres copies.',
+          h2Auto: "Ce que l'application contacte d'elle-même",
+          autoIntro: 'Deux choses, à chaque ouverture :',
+          auto1:
+            '<strong>Expo<\/strong> (<code>u.expo.dev<\/code>) — vérifie si un correctif est disponible. Il reçoit la version de votre application, rien qui vous concerne.',
+          auto2:
+            "<strong>Cloudflare<\/strong> (<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev<\/code> et <code>dl.dlany.uk<\/code>) — lit un petit fichier indiquant la version la plus récente. C'est une simple requête vers un fichier public.",
+          auto3:
+            "<strong>GitHub<\/strong> (<code>raw.githubusercontent.com<\/code>) — le même fichier, demandé seulement si la requête précédente échoue. GitHub est inaccessible depuis certains pays, d'où les deux sources.",
+          autoNote:
+            "Comme toute requête sur internet, celles-ci indiquent à Expo, Cloudflare et GitHub l'adresse depuis laquelle vous vous connectez. Aucun ne reçoit d'élément vous identifiant comme utilisateur de MiO, et aucun n'apprend ce que contient votre bibliothèque.",
+          h2Asked: "Ce qu'elle contacte lorsque vous le demandez",
+          asked1:
+            'Uniquement en réponse à une action de votre part, et uniquement pour la fonction utilisée : <strong>YouTube<\/strong>, <strong>Bilibili<\/strong>, <strong>NetEase Cloud Music<\/strong>, <strong>QQ Music<\/strong>, <strong>Kugou<\/strong> lorsque vous cherchez, ajoutez un lien ou importez une liste ; et <strong>Spotify<\/strong> si vous connectez un compte Spotify pour en importer.',
+          asked2:
+            "Ces services reçoivent votre requête et votre adresse internet, et leurs propres politiques de confidentialité s'appliquent à ce qu'ils en font. MiO ne leur envoie rien vous concernant au-delà de ce que la requête exige.",
+          asked3:
+            "Le bouton de don ouvre <strong>Ko-fi<\/strong> (<code>ko-fi.com<\/code>) dans votre navigateur. MiO n'a aucun système de paiement : il ouvre un lien, n'envoie rien vous concernant à Ko-fi et n'apprend jamais si vous avez fait un don.",
+          h2Diag: 'Diagnostic',
+          diag1:
+            "MiO conserve un bref relevé de son activité — imports, lecture et requêtes échouées — <strong>sur votre téléphone<\/strong>. Il n'est pas téléversé. La seule exception : si vous avez relié MiO à un serveur que vous hébergez vous-même, il y est envoyé une fois par jour, et nulle part ailleurs.",
+          diag2:
+            'Il ne contient délibérément <strong>ni titre, ni artiste, ni lien<\/strong>. Si vous utilisez <em>Copier le rapport<\/em> ou <em>Partager<\/em>, ce relevé quitte votre appareil uniquement parce que vous avez appuyé sur le bouton, et uniquement vers la destination que vous choisissez.',
+          h2Site: 'Ce site web',
+          site1:
+            "Ces pages (<code>mio.dlany.uk<\/code>) sont servies via <strong>Cloudflare<\/strong>, qui se place entre vous et le serveur. Cloudflare voit donc les requêtes vers ce site, y compris l'adresse internet d'où elles proviennent, et en conserve ses propres journaux. Le serveur situé derrière conserve des journaux d'accès ordinaires pour la sécurité et le dépannage.",
+          site2:
+            "Il n'y a ni cookies, ni traceurs, ni publicité sur ces pages. La page de téléchargement mémorise votre choix de langue dans votre propre navigateur ; cela ne quitte jamais votre appareil.",
+          h2Form: 'Le formulaire de signalement',
+          form1:
+            "Si vous signalez un problème, le formulaire est hébergé par <strong>Tally<\/strong> et vos réponses y sont conservées. Il demande ce qui n'a pas fonctionné et le rapport de diagnostic. <strong>L'adresse e-mail est facultative<\/strong> et sert uniquement à vous répondre à propos de ce signalement — jamais à autre chose, et jamais partagée.",
+          formOnly: "C'est le seul endroit où MiO vous demande des informations personnelles.",
+          h2Rights: 'Vos droits',
+          rights1:
+            "Comme l'application ne conserve rien vous concernant, il n'y a généralement rien à demander, corriger ou supprimer. L'exception est un signalement envoyé via le formulaire : vous pouvez demander sa suppression, et elle sera faite.",
+          rights2:
+            'Pour toute question sur cette page, utilisez le <a href="https://tally.so/r/J9EbDd">formulaire<\/a>.',
+          h2Changes: 'Modifications',
+          changes1:
+            "Si MiO se met à faire quelque chose que cette page ne décrit pas, cette page change d'abord. La date ci-dessous indique la dernière révision.",
+        },
+        ja: {
+          h1: 'プライバシー',
+          tagline:
+            'MiO があなたのデータをどう扱うか。ほとんど何もしないため、内容は短くなっています。',
+          warn: '<strong>アプリは何も収集しません。<\/strong> MiO にはアカウント、登録、アクセス解析、クラッシュ報告のいずれもありません。ライブラリ、プレイリスト、お気に入り、再生履歴はすべてあなたのスマートフォンに保存され、どこにも送信されません。',
+          h2App: 'アプリについて',
+          app1: '<strong>あなたの音楽を保管する MiO のサーバーはありません。<\/strong>音楽は各サービスから直接あなたの端末にダウンロードされます。このウェブサイトの背後にはサーバーがありますが、アプリはそれを使いません。',
+          app2: '広告識別子も、端末のフィンガープリントも、第三者のアクセス解析やクラッシュ報告の仕組みもアプリには含まれていません。',
+          app3: 'MiO をアンインストールすると保存されていたものはすべて消えます。保存されていたものはすべて、あなたのスマートフォンの中にあったからです。',
+          app4: 'ライブラリを別の端末にコピーすると、選んだフォルダーにファイルが書き出されます。書かれるのはライブラリの中身の一覧——タイトルとリンクであって音声そのものではありません——で、あなたが置いた場所以外へは行きません。もう一方の端末は自分でダウンロードします。',
+          h2Auto: 'アプリが自動的に接続する先',
+          autoIntro: '開くたびに、次の 2 種類だけです。',
+          auto1:
+            '<strong>Expo<\/strong>（<code>u.expo.dev<\/code>）— 修正が提供されているかを確認します。送られるのはアプリのバージョンで、あなたに関する情報ではありません。',
+          auto2:
+            '<strong>Cloudflare<\/strong>（<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev<\/code> と <code>dl.dlany.uk<\/code>）— 最新版を示す小さなファイルを読み込みます。公開ファイルへの通常のリクエストです。',
+          auto3:
+            '<strong>GitHub<\/strong>（<code>raw.githubusercontent.com<\/code>）— 同じファイルで、上のリクエストが失敗した場合にのみ要求します。GitHub に接続できない国や地域があるため、2 つ用意しています。',
+          autoNote:
+            'インターネット上のあらゆるリクエストと同様に、これらは接続元のアドレスを Expo・Cloudflare・GitHub に伝えます。いずれにも、あなたが MiO の利用者であると分かる情報は送られず、ライブラリの中身も伝わりません。',
+          h2Asked: 'あなたの操作に応じて接続する先',
+          asked1:
+            'あなたが操作したときのみ、使った機能のためだけに接続します。検索・リンクの追加・プレイリストのインポート時は <strong>YouTube<\/strong>、<strong>bilibili<\/strong>、<strong>NetEase Cloud Music<\/strong>、<strong>QQ 音楽<\/strong>、<strong>Kugou<\/strong>。インポートのために Spotify アカウントを接続した場合は <strong>Spotify<\/strong>。',
+          asked2:
+            'これらのサービスはあなたのリクエストと接続元アドレスを受け取り、その取り扱いには各社のプライバシーポリシーが適用されます。MiO は、リクエストに必要な範囲を超えてあなたに関する情報を送ることはありません。',
+          asked3:
+            '寄付ボタンを押すと、ブラウザで <strong>Ko-fi<\/strong>（<code>ko-fi.com<\/code>）が開きます。MiO 自体に決済機能はありません。リンクを開くだけで、あなたに関する情報を Ko-fi に送ることはなく、寄付したかどうかを知ることもありません。',
+          h2Diag: '診断記録',
+          diag1:
+            'MiO は自身の動作（インポート、再生、失敗したリクエスト）の短い記録を<strong>あなたのスマートフォン内に<\/strong>保持します。アップロードはされません。唯一の例外は、ご自身で運用しているサーバーに MiO を接続している場合で、そのときは 1 日に 1 回そのサーバーにのみ送信されます。',
+          diag2:
+            'この記録には<strong>曲名・アーティスト名・リンクを意図的に含めていません<\/strong>。<em>レポートをコピー<\/em>や<em>共有<\/em>を使った場合、その記録が端末から出るのはあなたがボタンを押したからであり、送り先もあなたが選んだ相手だけです。',
+          h2Site: 'このウェブサイトについて',
+          site1:
+            'これらのページ（<code>mio.dlany.uk<\/code>）は <strong>Cloudflare<\/strong> を通じて配信されており、Cloudflare はあなたとサーバーの間に位置します。そのため Cloudflare はこのサイトへのリクエスト（接続元アドレスを含む）を見ることができ、独自のログを保持します。その背後のサーバーは、セキュリティと問題調査のために通常のアクセスログを保持します。',
+          site2:
+            'これらのページに Cookie、トラッカー、広告はありません。ダウンロードページは選んだ言語をあなたのブラウザ内に記憶しますが、その情報が端末の外に出ることはありません。',
+          h2Form: '問題報告フォーム',
+          form1:
+            '問題を報告する場合、フォームは <strong>Tally<\/strong> によって提供され、回答はそこに保存されます。フォームでは何が起きたかと診断レポートを尋ねます。<strong>メールアドレスは任意<\/strong>で、その報告について返信するためだけに使われます。他の用途には使わず、共有もしません。',
+          formOnly: 'MiO が個人情報を尋ねるのは、ここだけです。',
+          h2Rights: 'あなたの権利',
+          rights1:
+            'アプリはあなたに関する情報を保存しないため、通常、開示・訂正・削除を求める対象はありません。例外はフォームから送った報告で、削除を希望すれば削除します。',
+          rights2:
+            'このページの内容についてのお問い合わせは、<a href="https://tally.so/r/J9EbDd">報告フォーム<\/a>をご利用ください。',
+          h2Changes: '変更について',
+          changes1:
+            'MiO がこのページに記載のない動作を始める場合は、まずこのページを更新します。下の日付が最終改訂日です。',
+        },
+        ko: {
+          h1: '개인정보',
+          tagline: 'MiO가 당신의 데이터로 무엇을 하는지. 하는 일이 거의 없어서 짧습니다.',
+          warn: '<strong>앱은 아무것도 수집하지 않습니다.<\/strong> MiO에는 계정도, 가입도, 분석 도구도, 오류 보고도 없습니다. 라이브러리, 재생목록, 즐겨찾기, 재생 기록은 모두 휴대폰에 저장되며 어디로도 전송되지 않습니다.',
+          h2App: '앱에 관하여',
+          app1: '<strong>당신의 음악을 보관하는 MiO 서버는 없습니다.<\/strong> 음악은 각 서비스에서 기기로 직접 내려받습니다. 이 웹사이트 뒤에는 서버가 있지만, 앱은 그것을 사용하지 않습니다.',
+          app2: '광고 식별자도, 기기 지문 인식도, 제3자 분석이나 오류 보고 소프트웨어도 앱에 없습니다.',
+          app3: 'MiO를 삭제하면 저장했던 모든 것이 사라집니다. 저장했던 모든 것이 당신의 휴대폰 안에 있었기 때문입니다.',
+          app4: '라이브러리를 다른 기기로 복사하면 선택한 폴더에 파일이 기록됩니다. 그 파일에는 라이브러리에 무엇이 있는지가 — 오디오가 아니라 제목과 링크가 — 들어 있고, 당신이 둔 곳 외에는 어디로도 가지 않습니다. 다른 기기는 스스로 내려받습니다.',
+          h2Auto: '앱이 스스로 접속하는 곳',
+          autoIntro: '열 때마다 두 가지뿐입니다:',
+          auto1:
+            '<strong>Expo<\/strong>(<code>u.expo.dev<\/code>) — 수정 사항이 있는지 확인합니다. 앱의 버전만 전달되며, 당신에 관한 정보는 전달되지 않습니다.',
+          auto2:
+            '<strong>Cloudflare<\/strong>(<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev<\/code> 및 <code>dl.dlany.uk<\/code>) — 최신 버전을 알려주는 작은 파일을 읽습니다. 공개된 파일에 대한 평범한 요청입니다.',
+          auto3:
+            '<strong>GitHub<\/strong>(<code>raw.githubusercontent.com<\/code>) — 같은 파일이며, 위 요청이 실패한 경우에만 요청합니다. 일부 국가에서는 GitHub에 접속할 수 없어 두 곳을 둡니다.',
+          autoNote:
+            '인터넷의 모든 요청이 그렇듯, 이 요청들은 당신이 접속한 인터넷 주소를 Expo, Cloudflare, GitHub에 알립니다. 어느 쪽에도 당신이 MiO 사용자임을 알 수 있는 정보는 전달되지 않으며, 라이브러리 내용도 전달되지 않습니다.',
+          h2Asked: '당신이 요청할 때 접속하는 곳',
+          asked1:
+            '당신이 무언가를 했을 때만, 그리고 사용한 기능을 위해서만 접속합니다. 검색하거나 링크를 추가하거나 재생목록을 가져올 때는 <strong>YouTube<\/strong>, <strong>빌리빌리<\/strong>, <strong>NetEase Cloud Music<\/strong>, <strong>QQ뮤직<\/strong>, <strong>Kugou<\/strong>에, 가져오기를 위해 Spotify 계정을 연결했다면 <strong>Spotify<\/strong>에 접속합니다.',
+          asked2:
+            '이 서비스들은 당신의 요청과 인터넷 주소를 받으며, 그것을 어떻게 다루는지는 각자의 개인정보 처리방침이 적용됩니다. MiO는 요청 자체에 필요한 범위를 넘어 당신에 관한 어떤 정보도 보내지 않습니다.',
+          asked3:
+            '후원 버튼을 누르면 브라우저에서 <strong>Ko-fi<\/strong>(<code>ko-fi.com<\/code>)가 열립니다. MiO에는 자체 결제 기능이 없습니다. 링크를 열 뿐이며, 당신에 관한 정보를 Ko-fi에 보내지 않고, 후원 여부도 알 수 없습니다.',
+          h2Diag: '진단 기록',
+          diag1:
+            'MiO는 자신이 한 일(가져오기, 재생, 실패한 요청)을 짧게 <strong>휴대폰 안에<\/strong> 기록합니다. 업로드되지 않습니다. 유일한 예외는 직접 운영하는 서버에 MiO를 연결한 경우로, 그때는 하루에 한 번 그 서버로만 전송됩니다.',
+          diag2:
+            '이 기록에는 <strong>곡 제목도, 아티스트도, 링크도 의도적으로 담지 않습니다<\/strong>. <em>보고서 복사<\/em>나 <em>공유<\/em>를 사용하면, 그 기록이 기기를 벗어나는 것은 오직 당신이 버튼을 눌렀기 때문이며, 보내는 곳도 당신이 고른 곳뿐입니다.',
+          h2Site: '이 웹사이트',
+          site1:
+            '이 페이지들(<code>mio.dlany.uk<\/code>)은 <strong>Cloudflare<\/strong>를 통해 제공되며, Cloudflare는 당신과 서버 사이에 위치합니다. 따라서 Cloudflare는 이 사이트로의 요청을(요청이 온 인터넷 주소를 포함해) 볼 수 있고 자체 기록을 보관합니다. 그 뒤의 서버는 보안과 문제 해결을 위해 일반적인 접속 기록을 보관합니다.',
+          site2:
+            '이 페이지에는 쿠키도, 추적기도, 광고도 없습니다. 다운로드 페이지는 선택한 언어를 당신의 브라우저에 기억하지만, 그 정보는 기기를 벗어나지 않습니다.',
+          h2Form: '문제 신고 양식',
+          form1:
+            '문제를 신고하면 그 양식은 <strong>Tally<\/strong>가 호스팅하며 답변은 그곳에 저장됩니다. 무엇이 잘못되었는지와 진단 보고서를 묻습니다. <strong>이메일 주소는 선택 사항<\/strong>이며 해당 신고에 답변하기 위해서만 사용됩니다. 다른 용도로 쓰거나 공유하지 않습니다.',
+          formOnly: 'MiO가 개인정보를 묻는 곳은 여기뿐입니다.',
+          h2Rights: '당신의 권리',
+          rights1:
+            '앱이 당신에 관해 아무것도 저장하지 않으므로, 일반적으로 요청하거나 정정하거나 삭제할 것이 없습니다. 예외는 양식으로 보낸 신고이며, 삭제를 요청하면 삭제됩니다.',
+          rights2:
+            '이 페이지의 내용에 대해 문의하려면 <a href="https://tally.so/r/J9EbDd">신고 양식<\/a>을 이용하세요.',
+          h2Changes: '변경 사항',
+          changes1:
+            'MiO가 이 페이지에 없는 일을 하기 시작하면, 이 페이지가 먼저 바뀝니다. 아래 날짜가 마지막 개정일입니다.',
+        },
+        ru: {
+          h1: 'Конфиденциальность',
+          tagline: 'Что MiO делает с вашими данными. Коротко, потому что делает он очень мало.',
+          warn: '<strong>Приложение ничего не собирает.<\/strong> В MiO нет аккаунтов, регистрации, аналитики и отчётов о сбоях. Ваша библиотека, плейлисты, избранное и история прослушивания хранятся на телефоне и никуда не отправляются.',
+          h2App: 'Приложение',
+          app1: '<strong>Никакой сервер MiO не хранит вашу музыку.<\/strong> Она загружается напрямую из сервиса на ваше устройство. У этого сайта есть сервер, но приложение им не пользуется.',
+          app2: 'В приложении нет рекламного идентификатора, снятия отпечатка устройства и стороннего ПО для аналитики или отчётов о сбоях.',
+          app3: 'Удаление MiO стирает всё, что оно хранило, потому что всё, что оно хранило, было на вашем телефоне.',
+          app4: 'Копирование библиотеки на другой телефон записывает файл в выбранную вами папку. В нём перечислено, что есть в библиотеке — названия и ссылки, а не сам звук — и он не уходит никуда, кроме места, куда вы его положили. Другой телефон скачивает свои копии сам.',
+          h2Auto: 'К чему приложение обращается само',
+          autoIntro: 'Два адреса, при каждом запуске:',
+          auto1:
+            '<strong>Expo<\/strong> (<code>u.expo.dev<\/code>) — проверяет, доступно ли исправление. Получает версию приложения, но ничего о вас.',
+          auto2:
+            '<strong>Cloudflare<\/strong> (<code>pub-6eb86219220840aa84b5dd9ecde0059c.r2.dev<\/code> и <code>dl.dlany.uk<\/code>) — читает небольшой файл с номером свежей версии. Это обычный запрос к публичному файлу.',
+          auto3:
+            '<strong>GitHub<\/strong> (<code>raw.githubusercontent.com<\/code>) — тот же файл, запрашивается только если предыдущий запрос не удался. В некоторых странах GitHub недоступен, поэтому источников два.',
+          autoNote:
+            'Как и любой запрос в интернете, эти сообщают Expo, Cloudflare и GitHub адрес, с которого вы подключаетесь. Ни одному из них не передаётся ничего, что определяло бы вас как пользователя MiO, и ни один не узнаёт, что находится в вашей библиотеке.',
+          h2Asked: 'К чему оно обращается по вашей просьбе',
+          asked1:
+            'Только в ответ на ваши действия и только для той функции, которой вы воспользовались: <strong>YouTube<\/strong>, <strong>Bilibili<\/strong>, <strong>NetEase Cloud Music<\/strong>, <strong>QQ Music<\/strong>, <strong>Kugou<\/strong> при поиске, добавлении ссылки или импорте плейлиста; и <strong>Spotify<\/strong>, если вы подключили аккаунт Spotify для импорта.',
+          asked2:
+            'Эти сервисы получают ваш запрос и ваш интернет-адрес, и то, как они с ними поступают, регулируется их собственными политиками конфиденциальности. MiO не передаёт им о вас ничего сверх того, что требует сам запрос.',
+          asked3:
+            'Кнопка пожертвования открывает <strong>Ko-fi<\/strong> (<code>ko-fi.com<\/code>) в вашем браузере. У MiO нет собственной платёжной системы: приложение просто открывает ссылку, не передаёт Ko-fi ничего о вас и никогда не узнаёт, сделали ли вы пожертвование.',
+          h2Diag: 'Диагностика',
+          diag1:
+            'MiO ведёт короткую запись о том, чем занимался — импорт, воспроизведение и неудавшиеся запросы — <strong>на вашем телефоне<\/strong>. Она никуда не выгружается. Единственное исключение: если вы подключили MiO к серверу, который держите сами, — тогда она раз в сутки отправляется на него и больше никуда.',
+          diag2:
+            'В ней намеренно <strong>нет названий песен, исполнителей и ссылок<\/strong>. Если вы используете <em>Скопировать отчёт<\/em> или <em>Поделиться<\/em>, эта запись покидает устройство только потому, что вы нажали кнопку, и только туда, куда вы сами выберете.',
+          h2Site: 'Этот сайт',
+          site1:
+            'Эти страницы (<code>mio.dlany.uk<\/code>) отдаются через <strong>Cloudflare<\/strong>, который находится между вами и сервером. Поэтому Cloudflare видит запросы к сайту, включая интернет-адрес, с которого они приходят, и ведёт собственные журналы. Сервер за ним ведёт обычные журналы доступа для безопасности и диагностики.',
+          site2:
+            'На этих страницах нет ни файлов cookie, ни трекеров, ни рекламы. Страница загрузки запоминает выбранный язык в вашем собственном браузере; эти данные не покидают устройство.',
+          h2Form: 'Форма сообщения о проблеме',
+          form1:
+            'Если вы сообщаете о проблеме, форму размещает <strong>Tally<\/strong>, и ваши ответы хранятся там. Она спрашивает, что пошло не так, и просит отчёт диагностики. <strong>Адрес электронной почты необязателен<\/strong> и используется только для ответа вам по этому обращению — никогда для чего-то ещё и никогда не передаётся третьим сторонам.',
+          formOnly: 'Это единственное место, где MiO спрашивает у вас личные данные.',
+          h2Rights: 'Ваши права',
+          rights1:
+            'Поскольку приложение ничего о вас не хранит, запрашивать, исправлять или удалять, как правило, нечего. Исключение — обращение, отправленное через форму: вы можете попросить удалить его, и оно будет удалено.',
+          rights2:
+            'Чтобы спросить о чём-либо на этой странице, воспользуйтесь <a href="https://tally.so/r/J9EbDd">формой<\/a>.',
+          h2Changes: 'Изменения',
+          changes1:
+            'Если MiO начнёт делать что-то, чего эта страница не описывает, страница изменится первой. Дата ниже показывает, когда её последний раз пересматривали.',
+        },
+      }
+
+      ;(function () {
+        var nodes = document.querySelectorAll('[data-i18n]')
+        var english = {}
+        for (var i = 0; i < nodes.length; i++) {
+          english[nodes[i].getAttribute('data-i18n')] = nodes[i].innerHTML
+        }
+
+        function apply(lang) {
+          var dict = lang === 'en' ? english : I18N[lang]
+          if (!dict) return
+          for (var i = 0; i < nodes.length; i++) {
+            var key = nodes[i].getAttribute('data-i18n')
+            var value = dict[key] || english[key]
+            if (value) nodes[i].innerHTML = value
+          }
+          document.documentElement.lang = lang
+          var note = document.getElementById('machine-note')
+          if (note) note.hidden = lang === 'en'
+        }
+
+        var select = document.getElementById('lang')
+        if (!select) return
+
+        var stored = null
+        try {
+          stored = localStorage.getItem('mio-lang')
+        } catch (e) {
+          /* private mode, or storage disabled */
+        }
+        var known = function (lang) {
+          return lang === 'en' || Boolean(I18N[lang])
+        }
+        var browser = (navigator.language || 'en').split('-')[0]
+        var chosen = known(stored) ? stored : known(browser) ? browser : 'en'
+
+        select.value = chosen
+        apply(chosen)
+
+        select.addEventListener('change', function () {
+          apply(select.value)
+          try {
+            localStorage.setItem('mio-lang', select.value)
+          } catch (e) {
+            /* the choice just will not persist */
+          }
+        })
+      })()
+    </script>
+  </body>
+</html>

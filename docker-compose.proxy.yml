@@ -1,0 +1,81 @@
+# The shared edge proxy — its own project, on purpose.
+#
+#   docker network create edge          # once per host
+#   docker compose --env-file .env.prod -f docker-compose.proxy.yml up -d
+#
+# ## Why it is a separate project rather than another service in MiO's stack
+#
+# Compose projects are the unit of `up`, `down` and `restart`. While Caddy lived
+# in `docker-compose.prod.yml`, redeploying MiO restarted the front door of
+# everything else that would ever be hosted here. Splitting it means MiO and a
+# future project each deploy without touching the other's traffic.
+#
+# It is also the only project that binds a public port. Every application stack
+# behind it publishes nothing at all and is reachable only over the `edge`
+# network — the same reasoning that already kept MiO's API off the public
+# interface, applied one level out.
+name: proxy
+
+# Shared by every project on this host. External because its lifetime is longer
+# than any one project's: `docker compose down` on the proxy must not delete the
+# network MiO is still attached to.
+networks:
+  edge:
+    external: true
+
+# Every container on a shared box needs a log ceiling. Docker's `json-file`
+# default is *unbounded* — measured on the live droplet, where the backend had
+# written 11 MB in 12 days with no rotation configured anywhere and no
+# `/etc/docker/daemon.json` to set a default. One busy project can fill the disk
+# and take every other project down with it.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      # HTTP/3. Harmless if the host firewall drops it.
+      - "443:443/udp"
+    environment:
+      MIO_DOMAIN: ${MIO_DOMAIN}
+    volumes:
+      # Bind-mounted, not baked: adding a site is an edit and a reload rather
+      # than an image rebuild. `:ro` because Caddy never writes its own config.
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Where other projects drop their site files. Empty is fine — an import
+      # glob matching nothing warns and validates.
+      - ./proxy/sites:/etc/caddy/sites:ro
+      # The Cloudflare Origin Certificate and the one-line `tls` snippet that
+      # activates it. Gitignored — it holds a private key — so this is empty in
+      # CI and on a fresh clone, which the Caddyfile's import handles.
+      - ./proxy/certs:/etc/caddy/certs:ro
+      # The issued certificates. ⛔ Losing this volume re-issues on every
+      # restart, and Let's Encrypt allows 5 per exact domain per week.
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    logging: *logging
+    networks:
+      - edge
+    deploy:
+      resources:
+        limits:
+          # A ceiling to catch a runaway, not a tuning target: measured at
+          # ~46 MiB serving MiO. Raise it if a project behind the proxy starts
+          # pushing large bodies through.
+          memory: 96M
+
+volumes:
+  # ⛔ The issued certificates, and the reason this project has state at all.
+  # Let's Encrypt allows **5 certificates per exact domain per week**, so losing
+  # this volume is not merely slow — it can leave the site without HTTPS until
+  # the window rolls. `docs/deployment.md` has the one-time copy that moves the
+  # existing certificates out of `mio-prod_caddy-data` rather than re-issuing.
+  caddy-data:
+  caddy-config:

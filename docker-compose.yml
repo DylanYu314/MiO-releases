@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:7-alpine
+    # Persist queued work across a restart of this container.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      # Named explicitly: an unnamed build takes the last stage, which is prod.
+      target: dev
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # The Celery worker: same image and same bind mount as the API, so it shares
+  # the database and the library folder, but runs the jobs instead of serving
+  # HTTP. Concurrency is deliberately low — the work is download-bound, and
+  # SQLite tolerates only a few concurrent writers (ADR-006).
+  worker:
+    build:
+      context: ./backend
+      target: dev
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+    command: ["celery", "-A", "app.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      # Migrations run in the backend container; don't race them.
+      backend:
+        condition: service_started
+
+volumes:
+  redis-data:

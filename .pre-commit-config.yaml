@@ -1,0 +1,43 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      # Guards against stray binaries and build output. Lockfiles are exempt:
+      # they must be committed for reproducible installs (`npm ci`), and
+      # mobile/package-lock.json is legitimately ~540 KB because an Expo app
+      # pulls in the whole React Native toolchain.
+      - id: check-added-large-files
+        exclude: ^(mobile|frontend)/package-lock\.json$
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.1
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  # Run the frontend's own eslint/prettier from node_modules rather than a
+  # pinned mirror repo, so the hooks and CI always use identical versions.
+  # These need node on PATH (nvm users: this works from a normal shell).
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd frontend && npm run --silent lint'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js)$
+        pass_filenames: false
+
+      - id: prettier
+        name: prettier
+        entry: bash -c 'cd frontend && npm run --silent format'
+        language: system
+        files: ^frontend/
+        exclude: ^frontend/(package-lock\.json|public/)
+        pass_filenames: false

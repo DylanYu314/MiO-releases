@@ -1,0 +1,54 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits"],
+  "timezone": "Europe/London",
+  "schedule": ["before 9am on monday"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 9am on the first day of the month"]
+  },
+  "vulnerabilityAlerts": {
+    "schedule": ["at any time"],
+    "labels": ["dependencies", "security"]
+  },
+  "packageRules": [
+    {
+      "description": "Backend runtime and dev tooling, grouped so one PR runs backend CI once instead of a dozen times.",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "backend (minor and patch)"
+    },
+    {
+      "description": "yt-dlp breaks when YouTube changes, not on a schedule, and a stale one is a broken import rather than a missed feature. Its own PR, immediately.",
+      "matchPackageNames": ["yt-dlp", "yt-dlp-ejs", "bgutil-ytdlp-pot-provider"],
+      "groupName": "yt-dlp",
+      "schedule": ["at any time"],
+      "prPriority": 5
+    },
+    {
+      "description": "The web client. Grouped per ecosystem so a bump runs the workflows it can actually affect.",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["frontend/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "frontend (minor and patch)"
+    },
+    {
+      "description": "Expo pins its own versions to the SDK, and a native dependency bumped out from under a dev build produces a runtime error, not a red test. These are reviewed by hand, at an SDK upgrade. Every manager, not just npm: a first dry run (2026-09-03) showed Renovate reaching into mobile/modules/mio-media-session/android/build.gradle for androidx.media3, which is exactly the native dependency this rule exists to protect.",
+      "matchFileNames": ["mobile/**"],
+      "enabled": false
+    },
+    {
+      "description": "A major is a change, not an update: it gets read.",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Python is pinned deliberately, and its bump is not a major so the rule above does not catch it. backend/.python-version, backend/Dockerfile and requires-python are kept in step on purpose: the lock spans >=3.12, so a different interpreter can legitimately resolve different packages out of the same uv.lock, and that arrives as changed behaviour rather than a red test. Renovate listed python 3.12 -> 3.14 as a scheduled minor on its first run (2026-09-03), which would have opened unattended. It gets read.",
+      "matchPackageNames": ["python"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

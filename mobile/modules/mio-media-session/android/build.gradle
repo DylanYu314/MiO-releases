@@ -1,0 +1,38 @@
+plugins {
+  id 'com.android.library'
+  // The same pair every Expo module in node_modules uses. See
+  // `mio-foreground-task` for the three cloud builds that established it;
+  // `__tests__/nativeModuleConfig.test.ts` compares this file against the ones
+  // in node_modules so a fourth is not spent rediscovering the same omissions.
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'dev.dylanyu.mio.mediasession'
+version = '0.1.0'
+
+android {
+  namespace 'dev.dylanyu.mio.mediasession'
+
+  // Read by the autolinking plugin while it configures every module. Leaving it
+  // out is what failed `mio-equalizer`'s third build with
+  // `'android.defaultConfig.versionName' is not defined`.
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  // Pinned to exactly what expo-audio resolves, which is 1.9.0 — read out of
+  // its own android/build.gradle, not recalled. Two media3 versions in one APK
+  // is a duplicate-class failure at merge time, and these two are certain to
+  // meet: expo-audio owns the ExoPlayer instances and this owns the session
+  // that fronts them. Bumping expo-audio means bumping these lines with it.
+  //
+  // From Maven, never by project path — a local module cannot resolve a sibling
+  // Expo module that way, which was the second failed cloud build. Nothing here
+  // needs those classes anyway: the player is backed by JavaScript, not by an
+  // ExoPlayer.
+  implementation 'androidx.media3:media3-session:1.9.0'
+  implementation 'androidx.media3:media3-common:1.9.0'
+}

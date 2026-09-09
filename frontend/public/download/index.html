@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>Download MiO</title>
+    <meta
+      name="description"
+      content="MiO is a free music library manager for Android. Your music is stored on your phone — no account, no server."
+    />
+    <style>
+      /*
+        Deliberately one self-contained file, not part of the React app (#517).
+
+        The web client is parked (#481) and this page has to keep working
+        whatever happens to it — it is where a stranger arrives. It is also the
+        page someone reads when an app they just installed is refusing to open,
+        so it must not depend on a bundle loading.
+      */
+      :root {
+        --bg: #ffffff;
+        --surface: #f4f4f5;
+        --text: #18181b;
+        --muted: #52525b;
+        --border: #e4e4e7;
+        --accent: #542d7e;
+        --accent-text: #ffffff;
+        --warn-bg: #fff7ed;
+        --warn-border: #fed7aa;
+        --warn-text: #7c2d12;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --surface: #18181b;
+          --text: #fafafa;
+          --muted: #a1a1aa;
+          --border: #27272a;
+          --accent: #a78bfa;
+          --accent-text: #1e1b2e;
+          --warn-bg: #26190d;
+          --warn-border: #572f14;
+          --warn-text: #fed7aa;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 2rem 1.25rem 4rem;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.65 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      h1 {
+        font-size: 2.25rem;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.02em;
+      }
+      .tagline {
+        color: var(--muted);
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .cta {
+        display: block;
+        text-align: center;
+        background: var(--accent);
+        color: var(--accent-text);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        margin: 0 auto 0.75rem;
+        max-width: 26rem;
+      }
+      .cta:hover {
+        filter: brightness(1.08);
+      }
+      .cta-note {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0 0 2.5rem;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 2.5rem 0 0.75rem;
+      }
+      .warn {
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-border);
+        color: var(--warn-text);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+      }
+      .warn strong {
+        display: block;
+        margin-bottom: 0.35rem;
+      }
+      ol,
+      ul {
+        padding-left: 1.25rem;
+      }
+      li {
+        margin: 0.4rem 0;
+      }
+      .facts {
+        list-style: none;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        overflow: hidden;
+      }
+      .facts li {
+        margin: 0;
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .facts li:last-child {
+        border-bottom: none;
+      }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        background: var(--surface);
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.25rem;
+        font-size: 0.9em;
+      }
+      .langbar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.4rem;
+      }
+      .langbar select {
+        font: inherit;
+        font-size: 0.9rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        border: 1px solid var(--line, #d5d5dd);
+        background: transparent;
+        color: inherit;
+      }
+      .lang-note {
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+      .mirror {
+        margin-top: 0.6rem;
+        font-size: 0.9rem;
+        opacity: 0.85;
+      }
+      .mirror-note {
+        opacity: 0.75;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <!--
+          The language picker is a plain <select>: no framework, no fetch, and it
+          works before any script runs because the page is already written in
+          English underneath. If the script fails, a reader loses the picker, not
+          the page.
+        -->
+        <nav class="langbar">
+          <select id="lang" aria-label="Language">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="ru">Русский</option>
+          </select>
+          <span class="lang-note" id="machine-note" hidden
+            >Machine translation — English is the original.</span
+          >
+        </nav>
+        <h1>MiO</h1>
+        <p class="tagline" data-i18n="tagline">
+          A music library manager for Android. Your music lives on your phone.
+        </p>
+      </header>
+
+      <a class="cta" id="download" href="https://dl.dlany.uk/MiO-v1.0.1.apk"
+        ><span data-i18n="cta">Download for Android</span></a
+      >
+      <p class="cta-note" id="version" data-i18n="ctaNote">Free. No account, no sign-up.</p>
+      <!--
+        The mirror, second and quieter.
+
+        ⚠️ The primary button is R2 for everyone, not just for China: it is on
+        Cloudflare's edge, so it is fast globally, and its egress is free. GitHub
+        is offered as an alternative because it is the canonical archive and the
+        one host that still works if the bucket is ever emptied — the same
+        reasoning as the app's fallback in `latestVersion.ts`.
+
+        ⛔ Not the other way round. GitHub is blocked in mainland China, so a
+        page that led with it would work perfectly for whoever reviewed it and
+        reach nobody it was written for.
+      -->
+      <p class="mirror">
+        <span data-i18n="mirrorLabel">Or download from</span>
+        <a href="https://github.com/DylanYu314/MiO-releases/releases/latest">GitHub</a>
+        <span class="mirror-note" data-i18n="mirrorNote"
+          >— same file, but unavailable in mainland China.</span
+        >
+      </p>
+
+      <div class="warn" data-i18n="warn">
+        <strong>Android will warn you, and the warning is correct.</strong>
+        MiO is not from an app store, so your phone will ask whether to allow installing from this
+        source. That is expected — nothing has gone wrong. You will need to allow it for your
+        browser or file manager once.
+      </div>
+
+      <h2 data-i18n="h2Installing">Installing</h2>
+      <ol>
+        <li data-i18n="step1">Tap <strong>Download for Android</strong> above and open the APK.</li>
+        <li data-i18n="step2">
+          When Android asks, allow installing from your browser. It may be worded as
+          <em>"Install unknown apps"</em>.
+        </li>
+        <li data-i18n="step3">Tap Install, then open MiO.</li>
+      </ol>
+      <p data-i18n="keepsLibrary">
+        Installing a newer MiO over an older one keeps your library. You never need to uninstall
+        first.
+      </p>
+
+      <h2 data-i18n="h2Need">What you need</h2>
+      <ul class="facts">
+        <li data-i18n="need1"><strong>Android 7.0</strong> (Nougat) or newer.</li>
+        <li data-i18n="need2">Works on every Android phone, including older 32-bit ones.</li>
+        <li data-i18n="need3">About 69 MB to download, and room for the music you add.</li>
+      </ul>
+
+      <h2 data-i18n="h2What">What MiO is</h2>
+      <ul>
+        <li data-i18n="what1">
+          <strong>Yours, on your device.</strong> The library, the playlists and the audio files are
+          all on your phone. There is no account and no server holding your music.
+        </li>
+        <li data-i18n="what2">
+          <strong>Free, and it sells nothing.</strong> No paid tier, no unlocks, no adverts.
+        </li>
+        <li data-i18n="what3">
+          <strong>Playlist import</strong> from Spotify, NetEase, QQ Music, Kugou, YouTube and
+          Bilibili — you review the matches before anything downloads.
+        </li>
+        <li data-i18n="what4">
+          <strong>A real player:</strong> lock-screen and Bluetooth controls, crossfade, a ten-band
+          equaliser, mono, balance, volume levelling and a sleep timer. In English, Chinese,
+          Spanish, French, Japanese, Korean and Russian.
+        </li>
+        <li data-i18n="what5">
+          <strong>Move it to your next phone.</strong> Save your library to a file, load it on the
+          other phone, and it fetches its own copies. It is the backup too, so a lost phone is not a
+          lost library.
+        </li>
+      </ul>
+
+      <h2 data-i18n="h2Updates">Updates</h2>
+      <p data-i18n="updatesBody">
+        Most fixes arrive on their own — MiO checks when it starts, downloads in the background and
+        applies the fix next time you open it. Nothing to tap. Occasionally a change needs a new APK
+        from this page, and the app will tell you when that happens.
+      </p>
+
+      <h2 data-i18n="h2Broken">Something broken?</h2>
+      <p data-i18n="brokenBody">
+        Open <strong>Settings → Diagnostics</strong> in the app, tap <strong>Copy report</strong>,
+        and send it through the <a href="https://tally.so/r/J9EbDd">report form</a>. The report is
+        what the app recorded about itself — it contains no song titles and no personal details.
+      </p>
+
+      <h2 data-i18n="h2Chip">If you want to chip in</h2>
+      <p data-i18n="chip1">
+        MiO is free and always will be, and there is nothing to buy — no paid tier, no unlocks, no
+        supporter-only features. It is one person's side project, and the only running costs are a
+        small server and a domain.
+      </p>
+      <p data-i18n="chip2">
+        If it is useful to you and you feel like putting something toward that, there is a
+        <a href="https://ko-fi.com/mio_music">Ko-fi page</a>. Any amount is genuinely appreciated,
+        and none of it is expected — every part of MiO works exactly the same either way.
+      </p>
+
+      <footer>
+        <p>
+          <a href="/privacy/">Privacy</a> · Free software under
+          <a href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL-3.0</a>. Not affiliated with
+          YouTube, Spotify, Bilibili, NetEase, QQ Music or Kugou.
+        </p>
+      </footer>
+    </main>
+
+    <script>
+      /*
+        Show the version this page is offering, read from the same `version.json`
+        the *app* reads (#665). Two reasons it is fetched rather than written in:
+
+        - The droplet is deployed by hand (`git pull` + `docker compose up`), so
+          a hardcoded version would go stale at the next release and this page
+          would advertise the wrong one.
+        - It is the same single source of truth the app compares against, so the
+          page and the app can never disagree about what "latest" is.
+
+        ⚠️ It must fail silently. If the manifest is unreachable the page still
+        has a working download button pointing directly at the current APK, so a
+        failed fetch costs a version number, not the download.
+
+        ⛔ Both the manifest and the APK moved to `dl.dlany.uk` — a Cloudflare R2
+        bucket — because GitHub is blocked in mainland China (#725). Serving them
+        from there reaches everyone, costs nothing in egress, and keeps 69 MB of
+        download traffic off the droplet.
+      */
+
+      /*
+        Translations for this page (#725 follow-up).
+
+        ## Why the English stays in the markup
+
+        Every translatable element carries its English text in the HTML and a
+        `data-i18n` key. This script only ever *replaces* it. So the page is
+        complete and readable before any script runs, and a reader whose
+        JavaScript fails loses the picker rather than the page — the same rule
+        the version line and the download button already follow.
+
+        ⚠️ `innerHTML` rather than `textContent` because several strings carry
+        `<strong>` and links. Safe here and only here: every value below is a
+        literal in this file. Nothing from the network is ever written this way,
+        which is why the manifest's `url` is checked for `https://` first.
+
+        ⚠️ **Only Chinese has been read by someone who speaks it.** The other
+        five are machine translations, and the page says so when one is picked —
+        the same admission the app makes in its own language picker (#519).
+      */
+      var I18N = {
+        zh: {
+          tagline: '一款 Android 音乐库管理应用。你的音乐保存在你的手机上。',
+          cta: '下载 Android 版',
+          ctaNote: '免费。无需账号，无需注册。',
+          mirrorLabel: '或从以下位置下载',
+          mirrorNote: '— 同一个文件，但中国大陆无法访问。',
+          warn: '<strong>Android 会发出警告，而这个警告是正确的。<\/strong> MiO 不是来自应用商店，所以你的手机会询问是否允许从此来源安装。这是正常的，没有出错。你需要为浏览器或文件管理器允许一次。',
+          h2Installing: '安装步骤',
+          step1: '点击上方的<strong>下载 Android 版<\/strong>，然后打开 APK 文件。',
+          step2: '当 Android 询问时，允许从你的浏览器安装。它可能显示为<em>"安装未知应用"<\/em>。',
+          step3: '点击安装，然后打开 MiO。',
+          keepsLibrary: '用新版 MiO 覆盖安装旧版会保留你的音乐库。你永远不需要先卸载。',
+          h2Need: '系统要求',
+          need1: '<strong>Android 7.0<\/strong>（Nougat）或更新版本。',
+          need2: '支持所有 Android 手机，包括较旧的 32 位机型。',
+          need3: '下载约 69 MB，另需空间存放你添加的音乐。',
+          h2What: 'MiO 是什么',
+          what1:
+            '<strong>属于你，存在你的设备上。<\/strong>音乐库、播放列表和音频文件全部保存在你的手机里。没有账号，也没有服务器保存你的音乐。',
+          what2: '<strong>免费，且不出售任何东西。<\/strong>没有付费版，没有解锁项，没有广告。',
+          what3:
+            '<strong>播放列表导入<\/strong>：支持 Spotify、网易云音乐、QQ 音乐、酷狗、YouTube 和哔哩哔哩——下载前你可以先审核匹配结果。',
+          what4:
+            '<strong>真正的播放器：<\/strong>锁屏和蓝牙控制、淡入淡出、十段均衡器、单声道、声道平衡、音量统一和睡眠定时器。支持英语、中文、西班牙语、法语、日语、韩语和俄语。',
+          what5:
+            '<strong>换手机也能带走。<\/strong>把音乐库保存成一个文件，在另一台手机上载入，它会自己去下载。这同时也是备份，手机丢了，音乐库不会跟着丢。',
+          h2Updates: '更新',
+          updatesBody:
+            '大多数修复会自动送达——MiO 在启动时检查、在后台下载，并在你下次打开时应用。无需任何操作。偶尔某些改动需要从此页面下载新的 APK，届时应用会提示你。',
+          h2Broken: '遇到问题？',
+          brokenBody:
+            '在应用中打开<strong>设置 → 诊断<\/strong>，点击<strong>复制报告<\/strong>，然后通过<a href="https://tally.so/r/J9EbDd">反馈表单<\/a>发送。该报告是应用记录的自身运行情况——不含歌曲名称，也不含任何个人信息。',
+          h2Chip: '如果你想支持一下',
+          chip1:
+            'MiO 是免费的，并且永远都会是，没有任何东西可买——没有付费版、没有解锁项、没有仅限支持者的功能。这是一个人的业余项目，唯一的开销是一台小服务器和一个域名。',
+          chip2:
+            '如果它对你有用，并且你愿意为此出一份力，这里有一个 <a href="https://ko-fi.com/mio_music">Ko-fi 页面<\/a>。任何金额都令人由衷感激，但完全不必勉强——无论你是否捐赠，MiO 的每一项功能都完全一样。',
+        },
+        es: {
+          tagline: 'Un gestor de biblioteca musical para Android. Tu música vive en tu teléfono.',
+          cta: 'Descargar para Android',
+          ctaNote: 'Gratis. Sin cuenta, sin registro.',
+          mirrorLabel: 'O descargar desde',
+          mirrorNote: '— el mismo archivo, pero no disponible en China continental.',
+          warn: '<strong>Android te avisará, y el aviso es correcto.<\/strong> MiO no viene de una tienda de aplicaciones, así que tu teléfono preguntará si permites instalar desde este origen. Es lo esperado: no ha fallado nada. Tendrás que permitirlo una vez para tu navegador o gestor de archivos.',
+          h2Installing: 'Instalación',
+          step1: 'Toca <strong>Descargar para Android<\/strong> arriba y abre el APK.',
+          step2:
+            'Cuando Android lo pida, permite instalar desde tu navegador. Puede aparecer como <em>"Instalar apps desconocidas"<\/em>.',
+          step3: 'Toca Instalar y luego abre MiO.',
+          keepsLibrary:
+            'Instalar una versión nueva de MiO sobre una anterior conserva tu biblioteca. Nunca necesitas desinstalar primero.',
+          h2Need: 'Qué necesitas',
+          need1: '<strong>Android 7.0<\/strong> (Nougat) o posterior.',
+          need2: 'Funciona en cualquier teléfono Android, incluidos los antiguos de 32 bits.',
+          need3: 'Unos 69 MB de descarga, más espacio para la música que añadas.',
+          h2What: 'Qué es MiO',
+          what1:
+            '<strong>Tuyo, en tu dispositivo.<\/strong> La biblioteca, las listas y los archivos de audio están todos en tu teléfono. No hay cuenta ni servidor que guarde tu música.',
+          what2:
+            '<strong>Gratis, y no vende nada.<\/strong> Sin versión de pago, sin desbloqueos, sin anuncios.',
+          what3:
+            '<strong>Importación de listas<\/strong> desde Spotify, NetEase, QQ Music, Kugou, YouTube y Bilibili: revisas las coincidencias antes de que se descargue nada.',
+          what4:
+            '<strong>Un reproductor de verdad:<\/strong> controles en pantalla de bloqueo y Bluetooth, fundido encadenado, ecualizador de diez bandas, mono, balance, nivelado de volumen y temporizador. En inglés, chino, español, francés, japonés, coreano y ruso.',
+          what5:
+            '<strong>Llévala a tu próximo teléfono.<\/strong> Guarda tu biblioteca en un archivo, cárgalo en el otro teléfono y él descarga sus propias copias. También es la copia de seguridad: perder el teléfono ya no significa perder la biblioteca.',
+          h2Updates: 'Actualizaciones',
+          updatesBody:
+            'La mayoría de las correcciones llegan solas: MiO comprueba al arrancar, descarga en segundo plano y aplica la corrección la próxima vez que lo abras. No hay que tocar nada. De vez en cuando un cambio necesita un APK nuevo desde esta página, y la aplicación te avisará cuando ocurra.',
+          h2Broken: '¿Algo no funciona?',
+          brokenBody:
+            'Abre <strong>Ajustes → Diagnóstico<\/strong> en la aplicación, toca <strong>Copiar informe<\/strong> y envíalo por el <a href="https://tally.so/r/J9EbDd">formulario<\/a>. El informe es lo que la aplicación registró sobre sí misma: no contiene títulos de canciones ni datos personales.',
+          h2Chip: 'Si quieres aportar algo',
+          chip1:
+            'MiO es gratis y siempre lo será, y no hay nada que comprar: ni versión de pago, ni desbloqueos, ni funciones exclusivas. Es el proyecto personal de una sola persona, y los únicos gastos son un servidor pequeño y un dominio.',
+          chip2:
+            'Si te resulta útil y te apetece contribuir, hay una <a href="https://ko-fi.com/mio_music">página de Ko-fi<\/a>. Cualquier cantidad se agradece de verdad, y nada de ello se espera: MiO funciona exactamente igual en cualquier caso.',
+        },
+        fr: {
+          tagline:
+            'Un gestionnaire de bibliothèque musicale pour Android. Votre musique reste sur votre téléphone.',
+          cta: 'Télécharger pour Android',
+          ctaNote: 'Gratuit. Sans compte, sans inscription.',
+          mirrorLabel: 'Ou télécharger depuis',
+          mirrorNote: '— le même fichier, mais indisponible en Chine continentale.',
+          warn: "<strong>Android vous avertira, et l'avertissement est justifié.<\/strong> MiO ne vient pas d'une boutique d'applications, votre téléphone demandera donc l'autorisation d'installer depuis cette source. C'est normal : rien n'a échoué. Vous devrez l'autoriser une fois pour votre navigateur ou votre gestionnaire de fichiers.",
+          h2Installing: 'Installation',
+          step1: "Touchez <strong>Télécharger pour Android<\/strong> ci-dessus et ouvrez l'APK.",
+          step2:
+            "Quand Android le demande, autorisez l'installation depuis votre navigateur. Cela peut apparaître comme <em>« Installer des applications inconnues »<\/em>.",
+          step3: 'Touchez Installer, puis ouvrez MiO.',
+          keepsLibrary:
+            "Installer une version plus récente de MiO par-dessus une ancienne conserve votre bibliothèque. Vous n'avez jamais besoin de désinstaller d'abord.",
+          h2Need: "Ce qu'il vous faut",
+          need1: '<strong>Android 7.0<\/strong> (Nougat) ou plus récent.',
+          need2: 'Fonctionne sur tous les téléphones Android, y compris les anciens en 32 bits.',
+          need3: 'Environ 69 Mo à télécharger, plus la place pour la musique que vous ajoutez.',
+          h2What: "Ce qu'est MiO",
+          what1:
+            "<strong>À vous, sur votre appareil.<\/strong> La bibliothèque, les listes de lecture et les fichiers audio sont tous sur votre téléphone. Il n'y a ni compte ni serveur qui conserve votre musique.",
+          what2:
+            '<strong>Gratuit, et ne vend rien.<\/strong> Pas de version payante, pas de déblocage, pas de publicité.',
+          what3:
+            '<strong>Import de listes de lecture<\/strong> depuis Spotify, NetEase, QQ Music, Kugou, YouTube et Bilibili — vous validez les correspondances avant tout téléchargement.',
+          what4:
+            "<strong>Un vrai lecteur :<\/strong> commandes sur l'écran verrouillé et en Bluetooth, fondu enchaîné, égaliseur dix bandes, mono, balance, égalisation du volume et minuteur. En anglais, chinois, espagnol, français, japonais, coréen et russe.",
+          what5:
+            '<strong>Emportez-la sur votre prochain téléphone.<\/strong> Enregistrez votre bibliothèque dans un fichier, chargez-le sur l’autre téléphone et il télécharge ses propres copies. C’est aussi la sauvegarde : un téléphone perdu n’est plus une bibliothèque perdue.',
+          h2Updates: 'Mises à jour',
+          updatesBody:
+            "La plupart des correctifs arrivent tout seuls : MiO vérifie au démarrage, télécharge en arrière-plan et applique le correctif à la prochaine ouverture. Rien à faire. Parfois une modification nécessite un nouvel APK depuis cette page, et l'application vous le signalera.",
+          h2Broken: 'Quelque chose ne marche pas ?',
+          brokenBody:
+            'Ouvrez <strong>Réglages → Diagnostic<\/strong> dans l\'application, touchez <strong>Copier le rapport<\/strong>, puis envoyez-le via le <a href="https://tally.so/r/J9EbDd">formulaire<\/a>. Le rapport contient ce que l\'application a enregistré sur elle-même — aucun titre de morceau, aucune donnée personnelle.',
+          h2Chip: 'Si vous voulez contribuer',
+          chip1:
+            "MiO est gratuit et le restera, et il n'y a rien à acheter — pas de version payante, pas de déblocage, pas de fonction réservée. C'est le projet personnel d'une seule personne, et les seuls frais sont un petit serveur et un nom de domaine.",
+          chip2:
+            'Si cela vous est utile et que vous souhaitez y contribuer, il existe une <a href="https://ko-fi.com/mio_music">page Ko-fi<\/a>. Tout montant est sincèrement apprécié, et rien n\'est attendu — MiO fonctionne exactement pareil dans tous les cas.',
+        },
+        ja: {
+          tagline:
+            'Android 向けの音楽ライブラリ管理アプリ。あなたの音楽は、あなたのスマートフォンの中にあります。',
+          cta: 'Android 版をダウンロード',
+          ctaNote: '無料。アカウント登録は不要です。',
+          mirrorLabel: '別の場所からダウンロード',
+          mirrorNote: '— 同じファイルですが、中国本土からは利用できません。',
+          warn: '<strong>Android は警告を表示しますが、その警告は正しいものです。<\/strong> MiO はアプリストア経由ではないため、この提供元からのインストールを許可するか尋ねられます。これは想定どおりで、問題は起きていません。ブラウザまたはファイル管理アプリに対して一度だけ許可する必要があります。',
+          h2Installing: 'インストール手順',
+          step1: '上の<strong>Android 版をダウンロード<\/strong>をタップし、APK を開きます。',
+          step2:
+            'Android から尋ねられたら、ブラウザからのインストールを許可します。<em>「不明なアプリのインストール」<\/em>と表示される場合があります。',
+          step3: 'インストールをタップし、MiO を開きます。',
+          keepsLibrary:
+            '新しい MiO を既存のものに上書きインストールしても、ライブラリはそのまま残ります。先にアンインストールする必要はありません。',
+          h2Need: '必要なもの',
+          need1: '<strong>Android 7.0<\/strong>（Nougat）以降。',
+          need2: '32 ビットの古い機種を含め、すべての Android スマートフォンで動作します。',
+          need3: 'ダウンロードは約 69 MB。追加する音楽の分の空き容量も必要です。',
+          h2What: 'MiO について',
+          what1:
+            '<strong>あなたのもので、あなたの端末の中にあります。<\/strong>ライブラリもプレイリストも音声ファイルも、すべてスマートフォンの中にあります。アカウントはなく、音楽を保管するサーバーもありません。',
+          what2:
+            '<strong>無料で、何も販売しません。<\/strong>有料版も、アンロックも、広告もありません。',
+          what3:
+            '<strong>プレイリストのインポート<\/strong>：Spotify、NetEase、QQ 音楽、Kugou、YouTube、bilibili に対応。ダウンロード前に一致結果を確認できます。',
+          what4:
+            '<strong>本格的なプレーヤー：<\/strong>ロック画面と Bluetooth の操作、クロスフェード、10 バンドイコライザー、モノラル、バランス、音量の均一化、スリープタイマー。英語・中国語・スペイン語・フランス語・日本語・韓国語・ロシア語に対応。',
+          what5:
+            '<strong>次の端末にも持っていけます。<\/strong>ライブラリをファイルに保存し、別の端末で読み込めば、その端末が自分でダウンロードします。これはバックアップでもあるので、端末をなくしてもライブラリはなくなりません。',
+          h2Updates: 'アップデート',
+          updatesBody:
+            'ほとんどの修正は自動的に届きます。MiO は起動時に確認し、バックグラウンドでダウンロードして、次に開いたときに適用します。操作は不要です。まれに、このページから新しい APK が必要になる変更があり、その場合はアプリがお知らせします。',
+          h2Broken: 'うまく動かないときは',
+          brokenBody:
+            'アプリで<strong>設定 → 診断<\/strong>を開き、<strong>レポートをコピー<\/strong>をタップして、<a href="https://tally.so/r/J9EbDd">報告フォーム<\/a>から送ってください。レポートはアプリが自身について記録した内容で、曲名も個人情報も含まれません。',
+          h2Chip: '支援をお考えの方へ',
+          chip1:
+            'MiO は無料で、これからもずっと無料です。購入するものは何もありません。有料版も、アンロックも、支援者限定機能もありません。個人の趣味のプロジェクトで、かかる費用は小さなサーバーとドメインだけです。',
+          chip2:
+            '役に立っていて、その費用の一部を負担してもよいと思われる場合は、<a href="https://ko-fi.com/mio_music">Ko-fi のページ<\/a>があります。金額の多少にかかわらず心から感謝しますが、求めているわけではありません。支援の有無で MiO の動作が変わることは一切ありません。',
+        },
+        ko: {
+          tagline: '안드로이드용 음악 라이브러리 관리 앱. 당신의 음악은 당신의 휴대폰에 있습니다.',
+          cta: '안드로이드용 다운로드',
+          ctaNote: '무료. 계정도, 가입도 필요 없습니다.',
+          mirrorLabel: '다른 곳에서 다운로드',
+          mirrorNote: '— 같은 파일이지만 중국 본토에서는 이용할 수 없습니다.',
+          warn: '<strong>안드로이드가 경고를 표시하며, 그 경고는 옳습니다.<\/strong> MiO는 앱 스토어를 통하지 않으므로 휴대폰이 이 출처에서의 설치를 허용할지 묻습니다. 정상적인 과정이며 잘못된 것은 없습니다. 브라우저나 파일 관리자에 한 번만 허용하면 됩니다.',
+          h2Installing: '설치 방법',
+          step1: '위의 <strong>안드로이드용 다운로드<\/strong>를 누르고 APK를 엽니다.',
+          step2:
+            '안드로이드가 물으면 브라우저에서의 설치를 허용하세요. <em>"출처를 알 수 없는 앱 설치"<\/em>로 표시될 수 있습니다.',
+          step3: '설치를 누른 뒤 MiO를 엽니다.',
+          keepsLibrary:
+            '기존 버전 위에 새 MiO를 설치해도 라이브러리는 그대로 유지됩니다. 먼저 삭제할 필요가 없습니다.',
+          h2Need: '필요한 것',
+          need1: '<strong>안드로이드 7.0<\/strong>(누가) 이상.',
+          need2: '오래된 32비트 기기를 포함해 모든 안드로이드 휴대폰에서 작동합니다.',
+          need3: '다운로드 약 69MB, 그리고 추가할 음악을 위한 공간.',
+          h2What: 'MiO란',
+          what1:
+            '<strong>당신의 것이며, 당신의 기기에 있습니다.<\/strong> 라이브러리, 재생목록, 오디오 파일 모두 휴대폰 안에 있습니다. 계정도 없고, 음악을 보관하는 서버도 없습니다.',
+          what2:
+            '<strong>무료이며, 아무것도 판매하지 않습니다.<\/strong> 유료 등급도, 잠금 해제도, 광고도 없습니다.',
+          what3:
+            '<strong>재생목록 가져오기<\/strong>: Spotify, NetEase, QQ뮤직, Kugou, YouTube, 빌리빌리를 지원하며, 다운로드 전에 일치 결과를 확인할 수 있습니다.',
+          what4:
+            '<strong>제대로 된 플레이어:<\/strong> 잠금화면과 블루투스 조작, 크로스페이드, 10밴드 이퀄라이저, 모노, 밸런스, 음량 평준화, 취침 타이머. 영어, 중국어, 스페인어, 프랑스어, 일본어, 한국어, 러시아어를 지원합니다.',
+          what5:
+            '<strong>다음 휴대폰으로 옮길 수 있습니다.<\/strong> 라이브러리를 파일로 저장하고 다른 기기에서 불러오면, 그 기기가 스스로 내려받습니다. 백업이기도 하므로 휴대폰을 잃어버려도 라이브러리는 남습니다.',
+          h2Updates: '업데이트',
+          updatesBody:
+            '대부분의 수정은 자동으로 전달됩니다. MiO가 시작할 때 확인하고, 백그라운드에서 내려받아, 다음에 열 때 적용합니다. 따로 할 일은 없습니다. 가끔 이 페이지에서 새 APK가 필요한 변경이 있으며, 그럴 때는 앱이 알려줍니다.',
+          h2Broken: '문제가 있나요?',
+          brokenBody:
+            '앱에서 <strong>설정 → 진단<\/strong>을 열고 <strong>보고서 복사<\/strong>를 누른 뒤 <a href="https://tally.so/r/J9EbDd">신고 양식<\/a>으로 보내주세요. 보고서는 앱이 자신에 대해 기록한 내용이며, 곡 제목이나 개인 정보는 들어 있지 않습니다.',
+          h2Chip: '보탬이 되고 싶다면',
+          chip1:
+            'MiO는 무료이고 앞으로도 그럴 것이며, 살 것도 없습니다. 유료 등급도, 잠금 해제도, 후원자 전용 기능도 없습니다. 한 사람의 개인 프로젝트이며, 드는 비용은 작은 서버와 도메인뿐입니다.',
+          chip2:
+            '유용하다고 느끼고 그 비용에 보태고 싶다면 <a href="https://ko-fi.com/mio_music">Ko-fi 페이지<\/a>가 있습니다. 금액과 관계없이 진심으로 감사하지만 전혀 기대하지는 않습니다. 후원 여부와 상관없이 MiO의 모든 기능은 똑같이 작동합니다.',
+        },
+        ru: {
+          tagline:
+            'Менеджер музыкальной библиотеки для Android. Ваша музыка хранится на вашем телефоне.',
+          cta: 'Скачать для Android',
+          ctaNote: 'Бесплатно. Без аккаунта и регистрации.',
+          mirrorLabel: 'Или скачать с',
+          mirrorNote: '— тот же файл, но недоступен в материковом Китае.',
+          warn: '<strong>Android покажет предупреждение, и оно справедливо.<\/strong> MiO распространяется не через магазин приложений, поэтому телефон спросит, разрешить ли установку из этого источника. Это ожидаемо — ничего не сломалось. Разрешение нужно дать один раз для браузера или файлового менеджера.',
+          h2Installing: 'Установка',
+          step1: 'Нажмите <strong>Скачать для Android<\/strong> выше и откройте APK.',
+          step2:
+            'Когда Android спросит, разрешите установку из браузера. Это может называться <em>«Установка неизвестных приложений»<\/em>.',
+          step3: 'Нажмите «Установить», затем откройте MiO.',
+          keepsLibrary:
+            'Установка более новой версии MiO поверх старой сохраняет вашу библиотеку. Удалять предыдущую не нужно.',
+          h2Need: 'Что потребуется',
+          need1: '<strong>Android 7.0<\/strong> (Nougat) или новее.',
+          need2: 'Работает на любом телефоне Android, включая старые 32-разрядные.',
+          need3: 'Около 69 МБ на загрузку плюс место для музыки, которую вы добавите.',
+          h2What: 'Что такое MiO',
+          what1:
+            '<strong>Ваше, на вашем устройстве.<\/strong> Библиотека, плейлисты и аудиофайлы находятся на телефоне. Нет ни аккаунта, ни сервера, хранящего вашу музыку.',
+          what2:
+            '<strong>Бесплатно и ничего не продаётся.<\/strong> Нет платной версии, разблокировок и рекламы.',
+          what3:
+            '<strong>Импорт плейлистов<\/strong> из Spotify, NetEase, QQ Music, Kugou, YouTube и Bilibili — вы проверяете совпадения до того, как что-либо будет загружено.',
+          what4:
+            '<strong>Полноценный плеер:<\/strong> управление с экрана блокировки и по Bluetooth, кроссфейд, десятиполосный эквалайзер, моно, баланс, выравнивание громкости и таймер сна. На английском, китайском, испанском, французском, японском, корейском и русском.',
+          what5:
+            '<strong>Заберите её на следующий телефон.<\/strong> Сохраните библиотеку в файл, загрузите его на другом телефоне — и он скачает свои копии сам. Это же и резервная копия: потерянный телефон больше не значит потерянную библиотеку.',
+          h2Updates: 'Обновления',
+          updatesBody:
+            'Большинство исправлений приходит само: MiO проверяет обновления при запуске, скачивает их в фоне и применяет при следующем открытии. Ничего нажимать не нужно. Иногда изменение требует нового APK с этой страницы — приложение сообщит об этом.',
+          h2Broken: 'Что-то не работает?',
+          brokenBody:
+            'Откройте <strong>Настройки → Диагностика<\/strong> в приложении, нажмите <strong>Скопировать отчёт<\/strong> и отправьте его через <a href="https://tally.so/r/J9EbDd">форму<\/a>. Отчёт — это то, что приложение записало о себе: в нём нет ни названий песен, ни персональных данных.',
+          h2Chip: 'Если хотите поддержать',
+          chip1:
+            'MiO бесплатен и всегда таким останется, и покупать нечего — нет платной версии, разблокировок и функций «только для спонсоров». Это личный проект одного человека, а единственные расходы — небольшой сервер и домен.',
+          chip2:
+            'Если приложение вам полезно и вы хотите помочь с этими расходами, есть <a href="https://ko-fi.com/mio_music">страница Ko-fi<\/a>. Любая сумма искренне ценится, но ничего не ожидается — MiO работает совершенно одинаково в любом случае.',
+        },
+      }
+      var MACHINE = { es: 1, fr: 1, ja: 1, ko: 1, ru: 1 }
+
+      ;(function () {
+        var nodes = document.querySelectorAll('[data-i18n]')
+        var english = {}
+        for (var i = 0; i < nodes.length; i++) {
+          english[nodes[i].getAttribute('data-i18n')] = nodes[i].innerHTML
+        }
+
+        function apply(lang) {
+          var dict = lang === 'en' ? english : I18N[lang]
+          if (!dict) return
+          for (var i = 0; i < nodes.length; i++) {
+            var key = nodes[i].getAttribute('data-i18n')
+            // Fall back to the English already on the page rather than emptying
+            // an element — a missing key must never blank a paragraph.
+            var value = dict[key] || english[key]
+            if (value) nodes[i].innerHTML = value
+          }
+          document.documentElement.lang = lang
+          var note = document.getElementById('machine-note')
+          if (note) note.hidden = !MACHINE[lang]
+        }
+
+        var select = document.getElementById('lang')
+        if (!select) return
+
+        // Remembered choice first, then the browser's own preference, then
+        // English. `navigator.language` is a tag like `zh-CN`, so only the
+        // primary subtag is compared.
+        var stored = null
+        try {
+          stored = localStorage.getItem('mio-lang')
+        } catch (e) {
+          /* private mode, or storage disabled — not worth failing over */
+        }
+        var browser = (navigator.language || 'en').split('-')[0]
+        var known = function (lang) {
+          return lang === 'en' || Boolean(I18N[lang])
+        }
+        var chosen = known(stored) ? stored : known(browser) ? browser : 'en'
+
+        select.value = chosen
+        apply(chosen)
+
+        select.addEventListener('change', function () {
+          apply(select.value)
+          try {
+            localStorage.setItem('mio-lang', select.value)
+          } catch (e) {
+            /* the choice just will not persist */
+          }
+        })
+      })()
+
+      fetch('https://dl.dlany.uk/version.json')
+        .then(function (response) {
+          if (!response.ok) throw new Error('unavailable')
+          return response.json()
+        })
+        .then(function (data) {
+          // Validated rather than trusted: a 200 carrying the wrong document
+          // must not put "undefined" on the page.
+          if (!data || typeof data.versionName !== 'string') return
+          document.getElementById('version').textContent =
+            'Version ' + data.versionName + ' · free, no account, no sign-up.'
+
+          /*
+           * The button follows the manifest too, so a release is one file to
+           * update rather than two (#725).
+           *
+           * The href in the markup is a real, working link to the current APK
+           * — not a placeholder — because this runs after paint and may never
+           * run at all. It is the floor; this only ever raises it.
+           *
+           * ⚠️ Checked for `https://` before being written to `href`, for the
+           * same reason `parseLatestVersion` does on the app side: this value
+           * comes off the network, and a manifest that had been tampered with
+           * must not be able to turn the download button into a `javascript:`
+           * URL.
+           */
+          if (typeof data.url === 'string' && data.url.indexOf('https://') === 0) {
+            document.getElementById('download').href = data.url
+          }
+        })
+        .catch(function () {
+          /* Leave the static wording and the static link in place. */
+        })
+    </script>
+  </body>
+</html>

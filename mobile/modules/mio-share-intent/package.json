@@ -1,0 +1,7 @@
+{
+  "name": "mio-share-intent",
+  "version": "0.1.0",
+  "description": "Reads the text another app shared into MiO through Android's share sheet (#573)",
+  "main": "index.ts",
+  "private": true
+}

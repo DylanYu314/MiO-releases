@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiO — Music Library</title>
+    <!-- Apply the saved theme before first paint so there's no flash of the
+         wrong one (ADR-007). Defaults to "system", so a dark-OS user still gets
+         dark on first load. Kept tiny and inline on purpose — it must run
+         before the stylesheet. -->
+    <script>
+      ;(function () {
+        try {
+          var mode = localStorage.getItem('mio-theme-mode') || 'system'
+          var dark =
+            mode === 'dark' ||
+            (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+          var accent = localStorage.getItem('mio-theme-accent')
+          if (accent) document.documentElement.setAttribute('data-accent', accent)
+        } catch (e) {
+          /* private mode / storage disabled — fall back to the default theme */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

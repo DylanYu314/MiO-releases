@@ -1,0 +1,33 @@
+plugins {
+  id 'com.android.library'
+  // The same pair every Expo module in node_modules uses — compare
+  // `expo-audio/android/build.gradle`. An earlier attempt hand-rolled
+  // `kotlin-android` plus `rootProject.ext` lookups instead and the build
+  // failed: this plugin is what supplies the Kotlin setup, the SDK levels, the
+  // expo-modules-core dependency and the publishing configuration that `:expo`
+  // expects every module in the build to have.
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'dev.dylanyu.mio.equalizer'
+version = '0.1.0'
+
+android {
+  namespace 'dev.dylanyu.mio.equalizer'
+
+  // **Not optional, and not decoration.** Leaving this out failed the build
+  // with `'android.defaultConfig.versionName' is not defined` — the autolinking
+  // plugin reads it while configuring every module. Every module under
+  // node_modules declares both; `__tests__/nativeModuleConfig.test.ts` now
+  // checks this file against them, because each miss costs a twenty-minute
+  // cloud build to discover.
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+// No dependency on expo-audio, deliberately — see the note in
+// MioEqualizerModule.kt. An earlier attempt declared `project(':expo-audio')`
+// and Gradle could not resolve it, which is what sent this looking for a route
+// that needs no cross-module coupling at all.

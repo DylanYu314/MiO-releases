@@ -1,0 +1,29 @@
+plugins {
+  id 'com.android.library'
+  // The same pair every Expo module in node_modules uses, and the same pair
+  // `mio-equalizer` arrived at after three failed cloud builds — this plugin
+  // supplies the Kotlin setup, the SDK levels, the expo-modules-core dependency
+  // and the publishing configuration that `:expo` expects of every module in the
+  // build. `__tests__/nativeModuleConfig.test.ts` checks this file against the
+  // ones in node_modules so a fourth build is not spent rediscovering it.
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'dev.dylanyu.mio.foregroundtask'
+version = '0.1.0'
+
+android {
+  namespace 'dev.dylanyu.mio.foregroundtask'
+
+  // Read by the autolinking plugin while it configures every module. Leaving it
+  // out is what failed `mio-equalizer`'s third build with
+  // `'android.defaultConfig.versionName' is not defined`.
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+// No dependency on expo-audio or on any sibling module. This one genuinely needs
+// nothing but the Android framework — it starts a service and posts a
+// notification — which is the other half of why the work stays in JavaScript.

@@ -1,0 +1,48 @@
+# The production web container: static client + a reverse proxy to the API.
+#
+# ⚠️ `MIO_SITE_ADDRESS` is a *listen address* (`:80` in the container), not the
+# public hostname. `MIO_DOMAIN` is the hostname, it lives in the edge proxy, and
+# merging the two breaks OAuth sign-in while the site still looks healthy.
+
+{$MIO_SITE_ADDRESS} {
+	# Response headers, applied to the static pages and to /api alike (#765).
+	#
+	# ⛔ Before this, the live site returned **none of these** — no HSTS, no
+	# nosniff, no framing rule, no referrer policy — which is how it stayed
+	# through a public launch. `curl -I https://mio.dlany.uk/` was the whole
+	# diagnosis.
+	#
+	# ⚠️ Cloudflare sits in front and passes origin headers through, so these
+	# reach the browser. It is not a substitute for setting them here: the
+	# origin must be correct on its own, or a change at the edge silently
+	# removes them.
+	header {
+		# One year, and subdomains of *this* host. Without it a first visit,
+		# before any redirect, can be downgraded to http.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# Stops a browser guessing a content type that differs from the one
+		# sent — the classic route to executing an upload as script.
+		X-Content-Type-Options "nosniff"
+		# Clickjacking. Sent both ways deliberately: `frame-ancestors` is the
+		# modern rule and X-Frame-Options is what older browsers read.
+		X-Frame-Options "DENY"
+		Content-Security-Policy "frame-ancestors 'none'"
+		# Send the origin cross-site, never the path. The download page's URL
+		# is not sensitive; the habit is worth having before one is.
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Nothing here uses any of these, so refuse them all.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		# Do not advertise the server.
+		-Server
+	}
+
+	handle_path /api/* {
+		reverse_proxy backend:8000
+	}
+	handle {
+		root * /srv
+		encode zstd gzip
+		try_files {path} {path}/index.html /index.html
+		file_server
+	}
+}

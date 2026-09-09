@@ -1,0 +1,7 @@
+{
+  "name": "mio-equalizer",
+  "version": "0.1.0",
+  "description": "Ten-band equaliser for MiO, wrapping android.media.audiofx.DynamicsProcessing (#202)",
+  "main": "index.ts",
+  "private": true
+}

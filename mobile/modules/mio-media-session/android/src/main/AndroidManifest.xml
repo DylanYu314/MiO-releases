@@ -1,0 +1,31 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!--
+    Declared here so the module is self-describing, and repeated in
+    mobile/app.json the way the equaliser's MODIFY_AUDIO_SETTINGS is.
+
+    `mediaPlayback` and not `dataSync` (which is `mio-foreground-task`'s): since
+    Android 14 a foreground service must name a type and hold the permission for
+    it, and this one genuinely is media playback — which is also the type that
+    is *allowed* to keep running while the screen is off.
+  -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <application>
+    <!--
+      `exported="true"` and the intent filter are not optional: this is how the
+      system, Android Auto, Wear and the notification shade *find* a media
+      session at all. A MediaSessionService nobody can bind to is a session that
+      never appears on the lock screen, which is the bug this module exists for.
+    -->
+    <service
+      android:name=".MioMediaSessionService"
+      android:exported="true"
+      android:foregroundServiceType="mediaPlayback">
+      <intent-filter>
+        <action android:name="androidx.media3.session.MediaSessionService" />
+      </intent-filter>
+    </service>
+  </application>
+</manifest>

@@ -1,0 +1,28 @@
+plugins {
+  id 'com.android.library'
+  // The same pair every other module here uses, and every Expo module in
+  // node_modules. Together they supply the Kotlin
+  // setup, the SDK levels, the expo-modules-core dependency and the publishing
+  // configuration `:expo` expects of every module in the build.
+  // `__tests__/nativeModuleConfig.test.ts` checks this file against the ones in
+  // node_modules, which is how the fourth module inherits the three cloud builds
+  // `mio-equalizer` spent discovering it.
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'dev.dylanyu.mio.shareintent'
+version = '0.1.0'
+
+android {
+  namespace 'dev.dylanyu.mio.shareintent'
+
+  // Read by the autolinking plugin while it configures every module. Leaving it
+  // out is what failed `mio-equalizer`'s third build with
+  // `'android.defaultConfig.versionName' is not defined`.
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+// Nothing but the Android framework: this reads one string out of an Intent.

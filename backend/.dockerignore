@@ -1,0 +1,35 @@
+# Docker does not read .gitignore. Without this file `COPY . .` takes the whole
+# 1.1 GB of backend/, including `data/` — the SQLite database and ~900 MB of
+# downloaded audio.
+#
+# That is not just image bloat. The prod stage mounts a named volume at
+# /app/data, and Docker seeds an empty named volume from whatever the image has
+# at that path — so a first boot on the server would populate it with this
+# machine's library and database. Every unowned song would then be browsable and
+# streamable by anyone who reached the host, which is exactly what the project's
+# ground rules and its per-key isolation exist to prevent.
+
+# The library and the database. Never in an image.
+data/
+
+# A local virtualenv (181 MB), built for this machine's Python. The image
+# installs its own dependencies.
+.venv/
+
+# Secrets. Configuration reaches the container as environment variables.
+.env
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local setuptools output. Harmless but stale, and it lands in /app where the
+# application runs.
+build/
+*.egg-info/
+
+# Credentials mounted at runtime, never baked in (#177).
+secrets/

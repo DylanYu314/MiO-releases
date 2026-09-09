@@ -1,0 +1,7 @@
+{
+  "name": "mio-foreground-task",
+  "version": "0.1.0",
+  "description": "A dataSync foreground service that keeps a device import running when the app is minimised (#371, ADR-019)",
+  "main": "index.ts",
+  "private": true
+}

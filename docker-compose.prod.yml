@@ -1,0 +1,324 @@
+# The production stack. Run it with an env file:
+#
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+#
+# Every difference from docker-compose.yml is deliberate:
+#
+#   - **No bind mounts.** The code is baked into the image, so what runs is a
+#     built artifact rather than whatever happens to be in a directory.
+#   - **No published application ports.** Only Caddy is reachable from outside;
+#     the API, the worker and Redis talk over the compose network. A backend
+#     listening on 0.0.0.0:8000 with a public IP is an open, unencrypted MiO.
+#   - **Named volumes**, so the database, the library and the TLS certificates
+#     survive `docker compose down` and an image rebuild.
+#   - **restart: unless-stopped**, so a reboot brings MiO back without a human.
+#
+# A separate project name keeps these volumes from colliding with a development
+# stack's, on the chance both ever run on one machine.
+name: mio-prod
+
+# ⚠️ **This stack no longer binds a public port.** HTTPS is terminated by the
+# separate `proxy` project (`docker-compose.proxy.yml`), which reaches the `web`
+# service below over the shared external `edge` network. Bring the proxy up
+# first, or nothing is reachable from outside the host.
+#
+#   docker network create edge
+#   docker compose --env-file .env.prod -f docker-compose.proxy.yml up -d
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+
+networks:
+  # MiO's private network: redis, the API, the worker and the pot provider talk
+  # here and are invisible to every other project on the host.
+  default:
+  # Shared with the proxy. External because it outlives this project — a
+  # `docker compose down` here must not delete a network another project is on.
+  edge:
+    external: true
+
+# ⛔ Docker's `json-file` default is **unbounded**, and nothing on the droplet
+# had configured otherwise: measured 2026-09-03, the backend had written 11 MB
+# in 12 days with an empty log config on every container and no
+# `/etc/docker/daemon.json`. Alone that is a slow leak; on a box shared with
+# another project it is one service quietly filling the disk out from under
+# everything else.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# ⚠️ These are **ceilings to contain a runaway, not tuning targets.** Measured
+# idle on the live droplet: backend 76 MiB, caddy 46, pot-provider 17, worker
+# 10, redis 3 — so every limit below has several times the observed headroom.
+# They exist so that MiO cannot starve a co-hosted project (and, with the same
+# limits applied there, vice versa). If a container is OOM-killed the answer is
+# to raise its limit here, not to remove the mechanism; `docker inspect
+# --format '{{.State.OOMKilled}}' <container>` is how to tell that is what
+# happened, because the symptom is otherwise an unexplained restart.
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          # 11 MiB measured; this dataset is tiny and bounded.
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Proof-of-origin tokens for YouTube (#161).
+  #
+  # YouTube refuses datacenter IPs with "Sign in to confirm you're not a bot" on
+  # the very first request — an address problem, not a rate problem, so pacing
+  # cannot help and the same URL imports fine from a home connection. This
+  # service mints the token a genuine client would send; yt-dlp's plugin fetches
+  # from it. There is no such container in the development stack because a home
+  # connection is not flagged.
+  #
+  # ⚠️ **It did not work, and that is measured** (#177). The refusal rate from
+  # this droplet stayed at **1 import in 14** across four batches, *unchanged*
+  # by this provider — and unchanged by a JavaScript runtime or a signed-in
+  # cookie file either. The paragraph above is the reasoning that put it here;
+  # it is kept because it is still the correct description of the problem, but
+  # it must not be read as a description of a fix.
+  #
+  # That measurement is why #246 moved downloading to the phone, and #608 then
+  # removed the server from the product entirely. Nothing MiO ships calls this
+  # container: the only endpoint that reaches yt-dlp at all is `POST /jobs`,
+  # which exists for self-hosters.
+  #
+  # ⚠️ **Candidate for deletion, not yet deleted.** It costs ~7 MiB of RAM
+  # (measured on the live droplet) plus its image on disk, and its stated
+  # benefit is absent. What is *not* measured is whether it helps a self-hoster
+  # on a residential address, where the token is the only part of the mechanism
+  # that could still matter. Measure that before removing it, rather than
+  # reasoning from this comment.
+  #
+  # ⛔ **Pinned to a digest** (#765). It ran on `:latest` until then, so a third
+  # party's newest push became what runs on this box at the next pull, with no
+  # diff, no review and nothing in the repo to say it had changed. The tag is
+  # kept beside the digest because a bare digest is unreadable and Renovate can
+  # bump the pair; the digest is what Docker actually resolves.
+  #
+  # ⚠️ **This is a multi-arch manifest digest**, not a per-architecture one, so
+  # it resolves on both amd64 and arm64.
+  #
+  # No published port: only the API and worker need to reach it.
+  pot-provider:
+    image: brainicism/bgutil-ytdlp-pot-provider:2.0.0@sha256:ed86b6fdd5e430ddd7c8ce1adb55e1ab54db7c7dbc1bcbf3a82454a85b971164
+    init: true
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          # ⚠️ 256M, not the ~17 MiB this idles at on the droplet. A freshly
+          # started container was measured at **69.6 MiB** — four times the
+          # idle figure — because it is a Node service that has not yet
+          # collected. Sizing a ceiling from a long-settled reading is the
+          # "two readings of something stateful at different moments" trap, and
+          # it would have OOM-killed this container on every deploy.
+          memory: 256M
+
+  backend:
+    build:
+      context: ./backend
+      target: prod
+      args:
+        # The same value for both, so they share one image build rather than
+        # producing two that differ only in a label.
+        GIT_SHA: ${MIO_GIT_SHA:-unknown}
+    environment:
+      # Explicit rather than relying on the defaults in config.py: on a server,
+      # where the data lives should be readable from the deployment config and
+      # not require reading application source.
+      DATABASE_URL: sqlite:///./data/mio.db
+      LIBRARY_PATH: ./data/library
+      REDIS_URL: redis://redis:6379/0
+      LOG_LEVEL: ${MIO_LOG_LEVEL:-INFO}
+      LOG_FORMAT: json
+      # The gate is normally dormant until the first access key exists. On a
+      # public host that window is unacceptable, so lock imports and search from
+      # the very first boot (ADR-009).
+      REQUIRE_ACCESS_KEY: "true"
+      # ⛔ Off here, on everywhere else (#765). /docs, /redoc and /openapi.json
+      # all answered 200 on the public site, publishing every endpoint,
+      # parameter and schema. A public instance has no reader who needs them; a
+      # self-hoster keeps them, because the default in config.py is True.
+      API_DOCS_ENABLED: "false"
+      FRONTEND_BASE_URL: https://${MIO_DOMAIN}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      # Must match the Spotify dashboard byte for byte. The /api prefix is
+      # Caddy's, and is part of the public URL.
+      SPOTIFY_REDIRECT_URI: https://${MIO_DOMAIN}/api/spotify/callback
+      # Private YouTube playlist import (#106, ADR-014). Only the API needs
+      # these — `routers/google.py` is the sole consumer and no Celery task
+      # touches Google, which is why they are absent from the worker below.
+      #
+      # ⚠️ This block is an allowlist: a variable in `.env.prod` that is not
+      # named here never reaches the container. Google's were missing until
+      # 2026-08-13, so `/google/status` answered `configured: false` on a
+      # droplet whose `.env.prod` had them set.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # Unlike Spotify, which is PKCE and needs no secret, Google's flow is a
+      # confidential client and will not exchange a code without this.
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      # Derived from MIO_DOMAIN so it cannot drift from the public URL, and
+      # must be registered in the Google console exactly as it appears here.
+      GOOGLE_REDIRECT_URI: https://${MIO_DOMAIN}/api/google/callback
+      YTDLP_POT_PROVIDER_URL: http://pot-provider:4416
+      # Set only when MIO_COOKIES_FILE is, so an unconfigured deployment gets an
+      # empty value and no cookie file rather than a path to nothing (#177).
+      YTDLP_COOKIES_FILE: ${MIO_COOKIES_FILE:+/app/secrets/cookies.txt}
+    volumes:
+      - mio-data:/app/data
+      # /dev/null when unset — a *file*, which is the point: a bind mount whose
+      # source does not exist makes Docker create a **directory** there, and
+      # yt-dlp would then fail on something that looks nothing like the cause.
+      #
+      # Writable, not `:ro`. yt-dlp calls `cookiejar.save()` on close whenever
+      # `cookiefile` is set, so a read-only mount makes every extraction throw
+      # at the end — and rotating the cookies back is what keeps the session
+      # alive, so this is wanted rather than tolerated. The file must also be
+      # readable *and writable by the container's non-root user*; see
+      # docs/deployment.md, which is where the ownership belongs.
+      - ${MIO_COOKIES_FILE:-/dev/null}:/app/secrets/cookies.txt
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    healthcheck:
+      # Python rather than curl: the slim image has no curl, and adding one to
+      # the image just to check on it is a poor trade.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      target: prod
+      args:
+        # The same value for both, so they share one image build rather than
+        # producing two that differ only in a label.
+        GIT_SHA: ${MIO_GIT_SHA:-unknown}
+    environment:
+      DATABASE_URL: sqlite:///./data/mio.db
+      LIBRARY_PATH: ./data/library
+      REDIS_URL: redis://redis:6379/0
+      LOG_LEVEL: ${MIO_LOG_LEVEL:-INFO}
+      LOG_FORMAT: json
+      REQUIRE_ACCESS_KEY: "true"
+      # ⛔ Off here, on everywhere else (#765). /docs, /redoc and /openapi.json
+      # all answered 200 on the public site, publishing every endpoint,
+      # parameter and schema. A public instance has no reader who needs them; a
+      # self-hoster keeps them, because the default in config.py is True.
+      API_DOCS_ENABLED: "false"
+      # The worker is where downloads actually happen, so this matters more here
+      # than on the API.
+      YTDLP_POT_PROVIDER_URL: http://pot-provider:4416
+      YTDLP_COOKIES_FILE: ${MIO_COOKIES_FILE:+/app/secrets/cookies.txt}
+    # The same volume as the API: the worker writes the audio files the API then
+    # serves, and both open the same SQLite database.
+    volumes:
+      - mio-data:/app/data
+      # Writable for the same reason as the API's — yt-dlp saves the jar back.
+      - ${MIO_COOKIES_FILE:-/dev/null}:/app/secrets/cookies.txt
+    command:
+      [
+        "celery",
+        "-A",
+        "app.celery_app.celery_app",
+        "worker",
+        "--loglevel=info",
+        "--concurrency=2",
+      ]
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          # The largest ceiling in the stack: this is where yt-dlp and ffmpeg
+          # run, and `--concurrency=2` means two of them at once. Only a
+          # self-hoster's `POST /jobs` reaches it — the shipped app downloads on
+          # the phone (#246) — so it is idle here, but a limit sized for idle
+          # would OOM-kill the one job it exists to do.
+          memory: 512M
+    depends_on:
+      redis:
+        condition: service_healthy
+      # Migrations run in the backend container; don't race them.
+      backend:
+        condition: service_started
+      pot-provider:
+        condition: service_started
+
+  # MiO's own web front end. ⚠️ **Renamed from `caddy` in the proxy split**,
+  # because there are two Caddys on this host now and "the caddy container" had
+  # stopped being an unambiguous phrase. A rename orphans the old container, so
+  # the first deploy after this change wants `--remove-orphans`.
+  web:
+    build:
+      # The repo root, because the web image needs `shared/` as well as
+      # `frontend/` and Docker cannot copy from outside its context.
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: prod
+    # ⛔ No `ports:`. The edge proxy is the only thing on this host that binds a
+    # public port; this is reachable solely over the `edge` network. Publishing
+    # 80 here would put an unencrypted MiO on the public interface *and* collide
+    # with the proxy for the port.
+    environment:
+      # A listen address, not a hostname — see the header of ./Caddyfile. TLS is
+      # the proxy's job, so this is plain HTTP on the private network.
+      MIO_SITE_ADDRESS: ":80"
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          # Measured at ~46 MiB serving MiO's static client.
+          memory: 96M
+    networks:
+      default:
+      edge:
+        aliases:
+          # ⛔ Explicit, and globally unique across every project on the host.
+          # Compose's default alias is the *service name*, which is unique only
+          # within a project — so a second project with a service called `web`
+          # would collide on the shared network and resolve to whichever
+          # container answered first. The proxy addresses this name.
+          - mio-web
+    depends_on:
+      - backend
+
+volumes:
+  redis-data:
+  # The database and the downloaded library. This is the volume to back up.
+  mio-data:
+  # ⚠️ `caddy-data` and `caddy-config` are gone from this project — the
+  # certificates belong to the proxy now and live in `proxy_caddy-data`.
+  # `docs/deployment.md` has the one-time copy that carries them across without
+  # spending a Let's Encrypt issuance.
